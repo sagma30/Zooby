@@ -1,0 +1,6 @@
+{
+  "name": "Zooby",
+  "description": "Hyperlocal pet-care platform connecting pet parents with verified providers, veterinary services, rescue partners, and mobile care vans.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
