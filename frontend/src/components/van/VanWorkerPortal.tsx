@@ -10,6 +10,8 @@ import {
   calculateTravelEtaMinutes
 } from '../../services/gpsTracking';
 
+import { emergencyStore, EmergencyState } from '../../services/emergencyStore';
+
 interface VanWorkerPortalProps {
   user?: UserProfile;
   currentTab?: string;
@@ -34,13 +36,13 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
   const token = typeof window !== 'undefined' ? localStorage.getItem('zooby_auth_token') || undefined : undefined;
 
   const activeUser = propUser || authUser || {
-    id: 'usr-van-vikram',
-    name: 'Vikram Pawar',
-    email: 'vikram.van@zooby.care',
+    id: 'usr-van-rahul',
+    name: 'Rahul',
+    email: 'rahul.van@zooby.care',
     phone: '+91 98223 99001',
     role: 'VAN_WORKER' as const,
     location: 'College Road, Nashik',
-    assignedVanPlate: 'MH 15 ZB 4022',
+    assignedVanPlate: 'ZMV-014',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=240'
   };
 
@@ -59,7 +61,32 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
   const [isGpsActive, setIsGpsActive] = useState<boolean>(true);
   const [deviceCoords, setDeviceCoords] = useState<GeoCoordinates | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
-  const [incomingEmergency, setIncomingEmergency] = useState<EmergencyIncident | null>(null);
+
+  // --- Synchronized Shared Emergency State ---
+  const [emergency, setEmergency] = useState<EmergencyState | null>(() => emergencyStore.getActiveEmergency());
+  const [isAddingNotes, setIsAddingNotes] = useState(false);
+  const [clinicalNoteInput, setClinicalNoteInput] = useState('');
+  const [treatmentInput, setTreatmentInput] = useState('');
+
+  // Listen to emergencyStore updates
+  useEffect(() => {
+    const handleUpdate = (updated: EmergencyState) => {
+      setEmergency({ ...updated });
+    };
+    const handleCleared = () => {
+      setEmergency(null);
+    };
+
+    emergencyStore.on('emergency_updated', handleUpdate);
+    emergencyStore.on('emergency_resolved', handleUpdate);
+    emergencyStore.on('emergency_cleared', handleCleared);
+
+    return () => {
+      emergencyStore.off('emergency_updated', handleUpdate);
+      emergencyStore.off('emergency_resolved', handleUpdate);
+      emergencyStore.off('emergency_cleared', handleCleared);
+    };
+  }, []);
 
   // --- Continuous Real Geolocation Watcher ---
   useEffect(() => {
@@ -69,12 +96,11 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
       (coords) => {
         setDeviceCoords(coords);
         setGpsError(null);
-        // Push genuine device coordinates to backend
-        pushVanLocationUpdate('van-nashik-01', coords, token, {
+        pushVanLocationUpdate('van-zmv-014', coords, token, {
           workerName: activeUser.name,
           trackingStatus: 'ACTIVE',
           currentJobId: nextScheduledJob?.id,
-          currentEmergencyId: incomingEmergency?.incidentId
+          currentEmergencyId: emergency?.incidentId
         });
       },
       (err) => {
@@ -86,31 +112,7 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
     return () => {
       stopWatching();
     };
-  }, [isGpsActive, token, activeUser.name, nextScheduledJob?.id, incomingEmergency?.incidentId]);
-
-  // --- Listen for incoming emergency dispatches ---
-  useEffect(() => {
-    const fetchActiveEmergency = async () => {
-      try {
-        const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api/v1';
-        const res = await fetch(`${API_BASE_URL}/emergency/active`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data) {
-            setIncomingEmergency(json.data);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    };
-
-    fetchActiveEmergency();
-    const interval = setInterval(fetchActiveEmergency, 10000);
-    return () => clearInterval(interval);
-  }, [token]);
+  }, [isGpsActive, token, activeUser.name, nextScheduledJob?.id, emergency?.incidentId]);
 
   // Sync tab if currentTab prop changes from external router
   useEffect(() => {
@@ -254,78 +256,169 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
       </header>
 
       {/* Action Toast Notification */}
-      {/* 🚨 High-Priority Emergency Dispatch Alert Banner */}
-      {incomingEmergency && incomingEmergency.status !== 'RESOLVED' && incomingEmergency.status !== 'CANCELLED' && (
-        <div className="bg-rose-600 text-white px-4 md:px-8 py-3.5 shadow-lg border-b-2 border-rose-700 animate-in slide-in-from-top-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white text-rose-600 flex items-center justify-center font-bold animate-pulse shrink-0">
-              <span className="material-symbols-outlined text-2xl filled-icon">emergency</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-quicksand font-bold text-sm uppercase tracking-wider bg-rose-800 px-2 py-0.5 rounded-md">
-                  Rapid SOS Alert
-                </span>
-                <span className="text-xs font-bold text-rose-100">
-                  Priority: {incomingEmergency.triage.urgency}
-                </span>
+      {/* 🚨 High-Priority Emergency Dispatch Alert Banner & Active Care UI */}
+      {emergency && emergency.status !== 'RESOLVED' && emergency.status !== 'CANCELLED' && (
+        <div className="bg-rose-600 text-white px-4 md:px-8 py-4 shadow-xl border-b-2 border-rose-700 animate-in slide-in-from-top-4 space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-white text-rose-600 flex items-center justify-center font-bold animate-pulse shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-2xl filled-icon">emergency</span>
               </div>
-              <p className="text-xs font-medium text-white mt-0.5">
-                <strong>{incomingEmergency.petName || 'Pet'} ({incomingEmergency.petBreed || 'Animal'})</strong> • {incomingEmergency.category.replace('_', ' ')} • {incomingEmergency.location.address || 'Nashik'}
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-quicksand font-extrabold text-xs uppercase tracking-wider bg-rose-800 px-2.5 py-0.5 rounded-md">
+                    🚨 EMERGENCY REQUEST • #{emergency.incidentId}
+                  </span>
+                  <span className="text-xs font-bold text-rose-100 bg-white/20 px-2 py-0.5 rounded-full">
+                    Priority: {emergency.triage.urgency}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-200">
+                    {emergency.status === 'ARRIVED'
+                      ? 'Arrived at Scene'
+                      : emergency.status === 'IN_CARE'
+                      ? 'Care in Progress'
+                      : 'Responding (On Route)'}
+                  </span>
+                </div>
+                <h3 className="font-quicksand font-bold text-base md:text-lg text-white mt-0.5">
+                  Pet: <strong>{emergency.petName}</strong> ({emergency.petBreed}) • Emergency: <strong>{emergency.category.replace('_', ' ').toUpperCase()}</strong>
+                </h3>
+                <p className="text-xs text-rose-100 mt-0.5 flex items-center gap-2">
+                  <span>📍 {emergency.emergencyCoordinates.address}</span>
+                  <span>•</span>
+                  <strong>{emergency.distanceKm > 0 ? `${emergency.distanceKm} km (${emergency.etaMinutes} mins)` : 'At Doorstep'}</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Top Quick Actions */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {emergency.userPhone && (
+                <a
+                  href={`tel:${emergency.userPhone}`}
+                  className="py-2 px-3 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-base">call</span>
+                  <span>Call Parent ({emergency.userName})</span>
+                </a>
+              )}
+
+              {emergency.vetAssigned && (
+                <a
+                  href={`tel:${emergency.vetAssigned.phone}`}
+                  className="py-2 px-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-base">stethoscope</span>
+                  <span>Call Vet ({emergency.vetAssigned.name})</span>
+                </a>
+              )}
+
+              {emergency.status === 'DISPATCH_CONFIRMED' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    emergencyStore.acceptByWorker();
+                    showNotification('Accepted emergency dispatch! Route started.');
+                  }}
+                  className="py-2 px-5 rounded-xl bg-white text-rose-700 font-extrabold text-xs shadow-md hover:bg-rose-50 transition-all cursor-pointer"
+                >
+                  ACCEPT EMERGENCY
+                </button>
+              )}
+
+              {(emergency.status === 'DISPATCH_CONFIRMED' || emergency.status === 'EN_ROUTE') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    emergencyStore.markArrived();
+                    showNotification('Arrived at emergency location! Notified pet parent and vet.');
+                  }}
+                  className="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-base">task_alt</span>
+                  <span>ARRIVED AT SCENE</span>
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {incomingEmergency.userPhone && (
-              <a
-                href={`tel:${incomingEmergency.userPhone}`}
-                className="py-1.5 px-3 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-[15px]">call</span>
-                <span>Call Parent</span>
-              </a>
-            )}
+          {/* Active Care & Resolution Action Ribbon */}
+          {(emergency.status === 'ARRIVED' || emergency.status === 'IN_CARE') && (
+            <div className="pt-3 border-t border-rose-500/80 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white uppercase">Active Care Controls:</span>
 
-            {incomingEmergency.status === 'RESOURCE_ASSIGNED' && (
+                {emergency.status === 'ARRIVED' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      emergencyStore.startActiveCare();
+                      showNotification('Started on-scene stabilization & emergency care.');
+                    }}
+                    className="py-1.5 px-3 rounded-xl bg-white text-rose-700 font-bold text-xs shadow-xs"
+                  >
+                    START CARE
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsAddingNotes(true)}
+                  className="py-1.5 px-3 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs shadow-xs flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[15px]">edit_note</span>
+                  <span>ADD CLINICAL NOTES</span>
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => {
-                  setIncomingEmergency((prev) => prev ? { ...prev, status: 'EN_ROUTE' } : null);
-                  showNotification('Accepted emergency dispatch! Navigating to emergency scene.');
+                  if (window.confirm('Are you sure you want to resolve this emergency? This will generate the final summary and update the pet health record.')) {
+                    emergencyStore.resolveEmergency('Patient stabilized on-scene. Clean wound dressing and vitals normal.');
+                    showNotification('Emergency successfully resolved! Health record updated.');
+                  }
                 }}
-                className="py-1.5 px-4 rounded-xl bg-white text-rose-700 font-extrabold text-xs shadow-md hover:bg-rose-50 transition-all cursor-pointer"
+                className="py-1.5 px-4 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-extrabold text-xs shadow-md cursor-pointer flex items-center gap-1"
               >
-                Accept &amp; Navigate
+                <span className="material-symbols-outlined text-base">verified</span>
+                <span>RESOLVE EMERGENCY</span>
               </button>
-            )}
+            </div>
+          )}
 
-            {incomingEmergency.status === 'EN_ROUTE' && (
+          {/* Inline Clinical Note Input */}
+          {isAddingNotes && (
+            <div className="bg-rose-700/90 p-3 rounded-xl space-y-2 text-xs">
+              <div className="flex justify-between items-center font-bold">
+                <span>Add On-Scene Clinical Note / Treatment</span>
+                <button onClick={() => setIsAddingNotes(false)} className="text-white hover:text-rose-200">
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              </div>
+              <textarea
+                rows={2}
+                value={clinicalNoteInput}
+                onChange={(e) => setClinicalNoteInput(e.target.value)}
+                placeholder="e.g. Cleansed wound on right hind leg, applied sterile dressing, heart rate normal (110 bpm)..."
+                className="w-full p-2 bg-white text-black rounded-lg text-xs"
+              />
               <button
                 type="button"
                 onClick={() => {
-                  setIncomingEmergency((prev) => prev ? { ...prev, status: 'ARRIVED' } : null);
-                  showNotification('Arrived at emergency scene. Administering care.');
+                  if (clinicalNoteInput) {
+                    emergencyStore.addClinicalNotes(clinicalNoteInput);
+                    setClinicalNoteInput('');
+                    setIsAddingNotes(false);
+                    showNotification('Clinical observation logged to emergency timeline.');
+                  }
                 }}
-                className="py-1.5 px-4 rounded-xl bg-emerald-500 text-white font-extrabold text-xs shadow-md hover:bg-emerald-600 transition-all cursor-pointer"
+                className="py-1 px-3 bg-white text-rose-700 font-bold rounded-lg text-xs"
               >
-                Mark Arrived at Scene
+                Save Note to Record
               </button>
-            )}
-
-            {incomingEmergency.status === 'ARRIVED' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIncomingEmergency((prev) => prev ? { ...prev, status: 'RESOLVED' } : null);
-                  showNotification('Emergency care completed & resolved.');
-                }}
-                className="py-1.5 px-4 rounded-xl bg-emerald-500 text-white font-extrabold text-xs shadow-md hover:bg-emerald-600 transition-all cursor-pointer"
-              >
-                Resolve Emergency
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

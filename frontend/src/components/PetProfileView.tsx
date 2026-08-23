@@ -33,6 +33,7 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
   const handleEditProfile = onOpenEditProfile || onOpenEditPet || (() => {});
 
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [selectedEmergencySummary, setSelectedEmergencySummary] = useState<any | null>(null);
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
   const [locationData, setLocationData] = useState(() => pet?.liveLocation || {
     status: 'At Home' as const,
@@ -65,13 +66,14 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
     );
   }
 
-  // Filtered health events
+  // Filtered health events (including resolved 24/7 emergencies)
   const healthEventsList = pet.healthEvents || [];
   const filteredEvents = healthEventsList.filter((event) => {
     if (filterCategory === 'all') return true;
+    if (filterCategory === 'emergency') return event.eventTitle.includes('Emergency') || event.eventType === 'treatment';
     if (filterCategory === 'vaccination') return event.eventType === 'vaccination';
     if (filterCategory === 'checkup') return event.eventType === 'routine_checkup' || event.eventType === 'vet_visit';
-    if (filterCategory === 'medication') return event.eventType === 'medication' || event.eventType === 'treatment';
+    if (filterCategory === 'medication') return event.eventType === 'medication';
     return true;
   });
 
@@ -396,6 +398,17 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
                   >
                     Medication
                   </button>
+                  <button
+                    onClick={() => setFilterCategory('emergency')}
+                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                      filterCategory === 'emergency'
+                        ? 'bg-rose-600 text-white shadow-xs font-bold'
+                        : 'text-[#544434] hover:text-[#1b1c1a]'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    <span>Emergencies</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -492,6 +505,23 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
                           </div>
                         )}
 
+                        {/* Action link for emergency items */}
+                        {event.eventTitle.includes('Emergency') && (
+                          <div className="mt-3.5 pt-3 border-t border-rose-100 flex items-center justify-between">
+                            <button
+                              onClick={() => setSelectedEmergencySummary(event)}
+                              className="text-xs font-bold text-rose-700 hover:text-rose-900 flex items-center gap-1.5 hover:underline cursor-pointer bg-rose-50 px-3 py-1 rounded-lg"
+                            >
+                              <span className="material-symbols-outlined text-[15px]">description</span>
+                              <span>VIEW SUMMARY</span>
+                            </button>
+                            <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>Resolved by Zooby Rapid Response</span>
+                            </span>
+                          </div>
+                        )}
+
                         {/* Action link for upcoming items */}
                         {isUpcoming && (
                           <div className="mt-3.5 pt-3 border-t border-[#efeeea] flex items-center justify-between">
@@ -535,6 +565,59 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Emergency Summary Modal */}
+      {selectedEmergencySummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-[#dac2ae] space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-[#efeeea] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-lg filled-icon">emergency</span>
+                </div>
+                <h3 className="font-quicksand font-bold text-lg text-[#1b1c1a]">
+                  Emergency Medical Summary
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedEmergencySummary(null)}
+                className="p-1 rounded-full text-[#877462] hover:bg-[#f5f3ef]"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <div className="bg-[#fbf9f5] rounded-2xl p-4 border border-[#efeeea] space-y-3 text-xs">
+              <div className="flex justify-between items-center border-b border-[#efeeea] pb-2">
+                <span className="text-[#877462]">Incident Record</span>
+                <strong className="text-[#1b1c1a] font-bold">{selectedEmergencySummary.eventTitle}</strong>
+              </div>
+              <div className="flex justify-between items-center border-b border-[#efeeea] pb-2">
+                <span className="text-[#877462]">Date Recorded</span>
+                <strong className="text-[#1b1c1a] font-bold">{selectedEmergencySummary.date}</strong>
+              </div>
+              <div className="flex justify-between items-center border-b border-[#efeeea] pb-2">
+                <span className="text-[#877462]">Attending Medical Team</span>
+                <strong className="text-[#1b1c1a] font-bold">{selectedEmergencySummary.administeredBy || 'Dr. Mehta & Mobile Van Tech'}</strong>
+              </div>
+              <div className="pt-1">
+                <span className="text-[#877462] block mb-1">Clinical Treatment &amp; Resolution Notes:</span>
+                <p className="text-[#544434] bg-white p-3 rounded-xl border border-[#efeeea] leading-relaxed">
+                  {selectedEmergencySummary.notes}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedEmergencySummary(null)}
+              className="w-full py-2.5 rounded-xl bg-stone-900 hover:bg-black text-white font-bold text-xs cursor-pointer shadow-xs"
+            >
+              Close Record
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

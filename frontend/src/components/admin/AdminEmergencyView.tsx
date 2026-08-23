@@ -1,91 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { EmergencyIncident, VanLocation } from '../../types';
 import { ZoobyRealMap } from '../common/ZoobyRealMap';
+import { emergencyStore, EmergencyState } from '../../services/emergencyStore';
 
 interface AdminEmergencyViewProps {
-  onSelectIncident?: (incident: EmergencyIncident) => void;
+  onSelectIncident?: (incident: EmergencyState) => void;
 }
 
-const INITIAL_DEMO_INCIDENTS: EmergencyIncident[] = [
-  {
-    incidentId: 'sos-9921-X',
-    userId: 'usr-parent-aisha',
-    userName: 'Aisha Sharma',
-    userPhone: '+91 98220 11223',
-    petName: 'Bruno',
-    petSpecies: 'Dog',
-    petBreed: 'Golden Retriever',
-    category: 'accident_trauma',
-    description: 'Bruno injured his paw during morning walk on Gangapur Road. Bleeding controlled, limping severely.',
-    location: {
-      latitude: 20.0055,
-      longitude: 73.7650,
-      address: 'Near Silver Palm Enclave, Gangapur Road, Nashik'
-    },
-    triage: {
-      urgency: 'HIGH',
-      summary: 'Reported soft tissue trauma & localized laceration. Rapid mobile unit dispatched.',
-      primaryConcern: 'TRAUMA / LACERATION',
-      firstAidAdvice: ['Keep dog calm and immobilized', 'Apply clean gauze pad with gentle pressure'],
-      suggestedAction: 'Emergency Van Unit #1 dispatched for doorstep vitals check and wound dressing.',
-      isLifeThreatening: false,
-      triageModel: 'gemini-2.5-flash',
-      triagedAt: new Date()
-    },
-    assignedVanId: 'van-nashik-01',
-    assignedVanPlate: 'MH 15 ZB 4022',
-    assignedWorkerId: 'usr-van-vikram',
-    assignedWorkerName: 'Vikram Pawar',
-    assignedWorkerPhone: '+91 98223 99001',
-    status: 'EN_ROUTE',
-    statusHistory: [
-      { status: 'CREATED', timestamp: new Date(Date.now() - 1000 * 60 * 12), updatedBy: 'Aisha Sharma' },
-      { status: 'LOCATION_CONFIRMED', timestamp: new Date(Date.now() - 1000 * 60 * 11), updatedBy: 'System' },
-      { status: 'TRIAGE_COMPLETED', timestamp: new Date(Date.now() - 1000 * 60 * 10), updatedBy: 'AI Triage Engine' },
-      { status: 'DISPATCH_CONFIRMED', timestamp: new Date(Date.now() - 1000 * 60 * 8), updatedBy: 'Vikram Pawar' },
-      { status: 'EN_ROUTE', timestamp: new Date(Date.now() - 1000 * 60 * 5), updatedBy: 'Vikram Pawar' }
-    ],
-    distanceKm: 2.1,
-    etaMinutes: 7,
-    createdAt: new Date(Date.now() - 1000 * 60 * 12),
-    updatedAt: new Date()
-  }
-];
-
-export const AdminEmergencyView: React.FC<AdminEmergencyViewProps> = ({ onSelectIncident }) => {
-  const [incidents, setIncidents] = useState<EmergencyIncident[]>(INITIAL_DEMO_INCIDENTS);
-  const [selectedIncident, setSelectedIncident] = useState<EmergencyIncident | null>(INITIAL_DEMO_INCIDENTS[0]);
+export const AdminEmergencyView: React.FC<AdminEmergencyViewProps> = () => {
+  const [activeEmergency, setActiveEmergency] = useState<EmergencyState | null>(() => emergencyStore.getActiveEmergency());
   const [filterUrgency, setFilterUrgency] = useState<string>('ALL');
 
-  // Fetch live incidents from backend if available
   useEffect(() => {
-    const fetchIncidents = async () => {
-      try {
-        const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api/v1';
-        const res = await fetch(`${API_BASE_URL}/emergency/admin/all`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && json.data.length > 0) {
-            setIncidents(json.data);
-            setSelectedIncident(json.data[0]);
-          }
-        }
-      } catch {
-        // Fallback to demo state
-      }
+    const handleUpdate = (updated: EmergencyState) => {
+      setActiveEmergency({ ...updated });
     };
-    fetchIncidents();
+    const handleCleared = () => {
+      setActiveEmergency(null);
+    };
+
+    emergencyStore.on('emergency_updated', handleUpdate);
+    emergencyStore.on('emergency_resolved', handleUpdate);
+    emergencyStore.on('emergency_cleared', handleCleared);
+
+    return () => {
+      emergencyStore.off('emergency_updated', handleUpdate);
+      emergencyStore.off('emergency_resolved', handleUpdate);
+      emergencyStore.off('emergency_cleared', handleCleared);
+    };
   }, []);
 
-  const filtered = incidents.filter((inc) => {
-    if (filterUrgency === 'ALL') return true;
-    return inc.triage.urgency === filterUrgency;
-  });
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-rose-900 to-stone-900 p-6 rounded-3xl text-white shadow-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-rose-900 via-stone-900 to-black p-6 rounded-3xl text-white shadow-md">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center font-bold">
             <span className="material-symbols-outlined text-3xl filled-icon">emergency</span>
@@ -96,17 +43,17 @@ export const AdminEmergencyView: React.FC<AdminEmergencyViewProps> = ({ onSelect
                 24/7 Rapid SOS &amp; Emergency Telemetry
               </h2>
               <span className="px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold uppercase animate-pulse">
-                Live Feed
+                Live Multi-Role Sync
               </span>
             </div>
             <p className="text-xs text-stone-300">
-              Active incident monitoring, AI triage audit, and mobile van fleet emergency dispatch
+              Real-time synchronization across Pet Parent, Mobile Van Unit, and On-Call Veterinarian
             </p>
           </div>
         </div>
 
-        {/* Quick Filter */}
-        <div className="flex items-center gap-2 bg-stone-800/80 p-1 rounded-2xl border border-stone-700">
+        {/* Status / Filter */}
+        <div className="flex items-center gap-2 bg-stone-800/90 p-1.5 rounded-2xl border border-stone-700">
           {['ALL', 'CRITICAL', 'HIGH', 'MODERATE'].map((urg) => (
             <button
               key={urg}
@@ -123,153 +70,150 @@ export const AdminEmergencyView: React.FC<AdminEmergencyViewProps> = ({ onSelect
         </div>
       </div>
 
-      {/* Grid: Left Column Incident List | Right Column Map & Telemetry Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 5 Cols: Incident Feed */}
-        <div className="lg:col-span-5 space-y-3">
-          <div className="flex justify-between items-center px-1">
-            <h3 className="font-quicksand font-bold text-base text-[#1b1c1a]">
-              Active Incidents ({filtered.length})
-            </h3>
-            <span className="text-xs text-[#877462]">Auto-refreshing</span>
+      {activeEmergency ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left 5 Cols: Incident Overview & Timeline */}
+          <div className="lg:col-span-5 space-y-4">
+            {/* Main Active Incident Summary */}
+            <div className="bg-white rounded-3xl p-6 border border-[#dac2ae] shadow-xs space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-[#877462]">Active Incident</span>
+                  <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">
+                    #{activeEmergency.incidentId} • {activeEmergency.petName}
+                  </h3>
+                  <p className="text-xs text-[#544434] mt-0.5">
+                    {activeEmergency.petBreed} • Reported: {activeEmergency.category.replace('_', ' ').toUpperCase()}
+                  </p>
+                </div>
+
+                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800">
+                  {activeEmergency.status === 'ARRIVED'
+                    ? 'ARRIVED AT SCENE'
+                    : activeEmergency.status === 'IN_CARE'
+                    ? 'CARE IN PROGRESS'
+                    : activeEmergency.status === 'RESOLVED'
+                    ? 'RESOLVED'
+                    : 'RESPONDING'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-3 bg-[#fbf9f5] rounded-2xl border border-[#efeeea] text-xs">
+                <div>
+                  <span className="text-[#877462] block text-[10px] uppercase font-bold">Assigned Van</span>
+                  <strong className="text-[#1b1c1a] block mt-0.5">{activeEmergency.assignedVanPlate}</strong>
+                  <span className="text-[#544434]">{activeEmergency.assignedWorkerName} ({activeEmergency.assignedWorkerPhone})</span>
+                </div>
+                <div>
+                  <span className="text-[#877462] block text-[10px] uppercase font-bold">Supporting Vet</span>
+                  <strong className="text-[#1b1c1a] block mt-0.5">{activeEmergency.vetAssigned?.name || 'Dr. Aarav Mehta'}</strong>
+                  <span className="text-[#544434]">{activeEmergency.vetAssigned?.clinic}</span>
+                </div>
+              </div>
+
+              {/* Clinical Notes if available */}
+              {activeEmergency.clinicalNotes && (
+                <div className="p-3 bg-blue-50/70 rounded-2xl border border-blue-200 text-xs text-blue-900 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-blue-600">medical_services</span>
+                    <span>On-Scene Clinical Observation:</span>
+                  </div>
+                  <p>{activeEmergency.clinicalNotes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Live Chronological Emergency Timeline */}
+            <div className="bg-white rounded-3xl p-6 border border-[#dac2ae] shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-quicksand font-bold text-base text-[#1b1c1a] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-lg text-rose-600">history_toggle_drop_down</span>
+                  <span>Incident Event Timeline</span>
+                </h3>
+                <span className="text-[11px] text-[#877462] font-semibold">Auto-logging</span>
+              </div>
+
+              <div className="relative pl-6 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-rose-200">
+                {activeEmergency.timeline.map((entry, idx) => (
+                  <div key={idx} className="relative">
+                    <div className="absolute -left-[23px] top-1 w-3.5 h-3.5 rounded-full bg-rose-600 border-2 border-white ring-2 ring-rose-200" />
+                    <div className="text-xs">
+                      <div className="flex items-center justify-between text-[#877462]">
+                        <span className="font-bold text-[#1b1c1a]">{entry.time}</span>
+                        {entry.badge && (
+                          <span className="px-2 py-0.5 rounded-md bg-stone-100 text-[10px] font-bold text-[#544434]">
+                            {entry.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[#544434] mt-0.5 font-medium">{entry.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {filtered.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 border border-[#efeeea] text-center space-y-2">
-              <span className="material-symbols-outlined text-4xl text-emerald-600">verified</span>
-              <h4 className="font-bold text-sm text-[#1b1c1a]">No Active Emergencies</h4>
-              <p className="text-xs text-[#877462]">All reported pet emergencies have been safely resolved.</p>
-            </div>
-          ) : (
-            filtered.map((inc) => {
-              const isSelected = selectedIncident?.incidentId === inc.incidentId;
-              return (
-                <div
-                  key={inc.incidentId}
-                  onClick={() => {
-                    setSelectedIncident(inc);
-                    if (onSelectIncident) onSelectIncident(inc);
-                  }}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-2 ${
-                    isSelected
-                      ? 'bg-white border-rose-500 shadow-md ring-2 ring-rose-500/20'
-                      : 'bg-white border-[#efeeea] hover:border-[#dac2ae]'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          inc.triage.urgency === 'CRITICAL'
-                            ? 'bg-red-600 text-white animate-pulse'
-                            : inc.triage.urgency === 'HIGH'
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {inc.triage.urgency}
-                      </span>
-                      <span className="text-xs font-bold text-[#1b1c1a]">{inc.incidentId}</span>
-                    </div>
-
-                    <span className="text-[11px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
-                      {inc.status}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="font-bold text-sm text-[#1b1c1a]">
-                      {inc.petName || 'Pet'} ({inc.petBreed || 'Animal'}) • {inc.userName}
-                    </h4>
-                    <p className="text-xs text-[#544434] line-clamp-2 mt-0.5">{inc.description}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-[#efeeea] text-[11px] text-[#877462]">
-                    <span>📍 {inc.location.address || 'Nashik'}</span>
-                    <span className="font-bold text-[#1b1c1a]">
-                      {inc.assignedVanPlate ? `🚐 ${inc.assignedVanPlate}` : 'Awaiting Van'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Right 7 Cols: Interactive Fleet Telemetry Map & Details */}
-        <div className="lg:col-span-7 space-y-4">
-          {selectedIncident ? (
-            <>
-              {/* Telemetry Real Map */}
-              <div className="bg-white rounded-3xl p-5 border border-[#efeeea] shadow-xs space-y-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-quicksand font-bold text-lg text-[#1b1c1a]">
-                      Live Response Telemetry: {selectedIncident.incidentId}
-                    </h3>
-                    <p className="text-xs text-[#877462]">
-                      Target: {selectedIncident.location.address || 'Emergency Location'}
-                    </p>
-                  </div>
-
-                  {selectedIncident.etaMinutes && (
-                    <div className="bg-[#f4ebd9] px-3 py-1.5 rounded-xl text-right">
-                      <div className="text-[10px] text-[#877462] uppercase font-bold">Estimated ETA</div>
-                      <div className="text-sm font-bold text-[#895100]">{selectedIncident.etaMinutes} mins</div>
-                    </div>
-                  )}
+          {/* Right 7 Cols: Full Real-Time Telemetry Map */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="bg-white rounded-3xl p-5 border border-[#dac2ae] shadow-xs space-y-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-quicksand font-bold text-lg text-[#1b1c1a]">
+                    Live Telemetry Map — Incident #{activeEmergency.incidentId}
+                  </h3>
+                  <p className="text-xs text-[#877462]">
+                    Destination: {activeEmergency.emergencyCoordinates.address}
+                  </p>
                 </div>
 
-                <ZoobyRealMap
-                  height="320px"
-                  userPosition={{
-                    lat: selectedIncident.location.latitude,
-                    lng: selectedIncident.location.longitude,
-                    title: `Emergency: ${selectedIncident.petName || 'Pet'}`
-                  }}
-                  vanPosition={{
-                    lat: selectedIncident.location.latitude - 0.015, // Real live tracking offset
-                    lng: selectedIncident.location.longitude + 0.012,
-                    plate: selectedIncident.assignedVanPlate || 'MH 15 ZB 4022',
-                    status: selectedIncident.status
-                  }}
-                  showRouteLine={true}
-                  zoom={14}
-                />
-              </div>
-
-              {/* Triage & Clinical Notes Card */}
-              <div className="bg-white rounded-3xl p-5 border border-[#efeeea] shadow-xs space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-rose-900">
-                  <span className="material-symbols-outlined text-lg">medical_services</span>
-                  <span>AI Clinical Triage Summary ({selectedIncident.triage.triageModel})</span>
-                </div>
-                <p className="text-xs text-[#544434] leading-relaxed">
-                  {selectedIncident.triage.summary}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div className="p-3 rounded-xl bg-[#fbf9f5] border border-[#efeeea] text-xs">
-                    <span className="text-[#877462] block text-[10px] uppercase font-bold">Assigned Crew</span>
-                    <strong className="text-[#1b1c1a] block mt-0.5">{selectedIncident.assignedWorkerName || 'Vikram Pawar'}</strong>
-                    <span className="text-[11px] text-[#544434]">{selectedIncident.assignedWorkerPhone || '+91 98223 99001'}</span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#fbf9f5] border border-[#efeeea] text-xs">
-                    <span className="text-[#877462] block text-[10px] uppercase font-bold">Parent Contact</span>
-                    <strong className="text-[#1b1c1a] block mt-0.5">{selectedIncident.userName}</strong>
-                    <span className="text-[11px] text-[#544434]">{selectedIncident.userPhone}</span>
-                  </div>
+                <div className="bg-[#fbf9f5] px-3.5 py-1.5 rounded-xl border border-[#efeeea] text-right">
+                  <div className="text-[10px] uppercase font-bold text-[#877462]">Distance &amp; ETA</div>
+                  <strong className="text-sm font-bold text-[#895100]">
+                    {activeEmergency.distanceKm > 0
+                      ? `${activeEmergency.distanceKm} km (${activeEmergency.etaMinutes} mins)`
+                      : 'Arrived'}
+                  </strong>
                 </div>
               </div>
-            </>
-          ) : (
-            <div className="bg-white rounded-3xl p-12 border border-[#efeeea] text-center text-[#877462]">
-              Select an incident from the left to inspect real-time telemetry.
+
+              {/* Real Interactive Map with 3 Telemetry Pins: Pet, Van, Vet */}
+              <ZoobyRealMap
+                height="380px"
+                userPosition={{
+                  lat: activeEmergency.emergencyCoordinates.lat,
+                  lng: activeEmergency.emergencyCoordinates.lng,
+                  title: `📍 ${activeEmergency.petName} (Emergency Scene)`
+                }}
+                vanPosition={{
+                  lat: activeEmergency.vanCoordinates.lat,
+                  lng: activeEmergency.vanCoordinates.lng,
+                  heading: activeEmergency.vanCoordinates.heading,
+                  plate: activeEmergency.assignedVanPlate || 'ZMV-014',
+                  status: activeEmergency.status === 'ARRIVED' ? 'Arrived at Scene' : 'En Route'
+                }}
+                destinationPosition={{
+                  lat: 19.9910,
+                  lng: 73.7920,
+                  title: `🩺 ${activeEmergency.vetAssigned?.name || 'Dr. Mehta'} (Clinic Support)`
+                }}
+                showRouteLine={true}
+                zoom={14}
+              />
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-3xl p-12 border border-[#efeeea] text-center space-y-3">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-4xl">verified</span>
+          </div>
+          <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">No Active Emergency Dispatches</h3>
+          <p className="text-xs text-[#877462] max-w-md mx-auto">
+            All mobile care units are in standby or scheduled routine routes in Nashik.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

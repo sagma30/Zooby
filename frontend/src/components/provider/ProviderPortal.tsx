@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { UserSettingsView } from '../UserSettingsView';
 import { ProviderEarningsView } from './ProviderEarningsView';
@@ -11,6 +11,8 @@ import {
   ProviderCustomer,
   ProviderServiceItem
 } from '../../data/providerMockData';
+
+import { emergencyStore, EmergencyState } from '../../services/emergencyStore';
 
 interface ProviderPortalProps {
   currentTab?: string;
@@ -31,6 +33,30 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
   const [selectedAppointment, setSelectedAppointment] = useState<ProviderAppointment | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Synchronized Emergency State
+  const [emergency, setEmergency] = useState<EmergencyState | null>(() => emergencyStore.getActiveEmergency());
+  const [vetNoteInput, setVetNoteInput] = useState('');
+  const [isAddingVetNote, setIsAddingVetNote] = useState(false);
+
+  useEffect(() => {
+    const handleUpdate = (updated: EmergencyState) => {
+      setEmergency({ ...updated });
+    };
+    const handleCleared = () => {
+      setEmergency(null);
+    };
+
+    emergencyStore.on('emergency_updated', handleUpdate);
+    emergencyStore.on('emergency_resolved', handleUpdate);
+    emergencyStore.on('emergency_cleared', handleCleared);
+
+    return () => {
+      emergencyStore.off('emergency_updated', handleUpdate);
+      emergencyStore.off('emergency_resolved', handleUpdate);
+      emergencyStore.off('emergency_cleared', handleCleared);
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -191,6 +217,86 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
+              {/* 🚨 Live Emergency Tele-Support Banner */}
+              {emergency && emergency.status !== 'RESOLVED' && emergency.status !== 'CANCELLED' && (
+                <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-stone-900 text-white rounded-3xl p-5 shadow-lg border border-blue-500/40 space-y-3 animate-in slide-in-from-top-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/30 text-blue-300 flex items-center justify-center font-bold animate-pulse">
+                        <span className="material-symbols-outlined text-3xl filled-icon">emergency</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            Active Emergency Dispatch
+                          </span>
+                          <span className="text-xs text-blue-200 font-semibold">Incident #{emergency.incidentId}</span>
+                        </div>
+                        <h3 className="font-quicksand font-bold text-lg text-white mt-0.5">
+                          {emergency.petName} ({emergency.petBreed}) • {emergency.category.replace('_', ' ').toUpperCase()}
+                        </h3>
+                        <p className="text-xs text-stone-300 mt-0.5">
+                          📍 {emergency.emergencyCoordinates.address} • Responding Van: <strong>{emergency.assignedVanPlate} ({emergency.assignedWorkerName})</strong> • ETA: <strong>{emergency.distanceKm > 0 ? `${emergency.etaMinutes} mins (${emergency.distanceKm} km)` : 'Arrived'}</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href={`tel:${emergency.assignedWorkerPhone || '+919822399001'}`}
+                        className="py-2 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-base">call</span>
+                        <span>Call Driver ({emergency.assignedWorkerName})</span>
+                      </a>
+                      <a
+                        href={`tel:${emergency.userPhone || '+919820145678'}`}
+                        className="py-2 px-3.5 rounded-xl bg-stone-700 hover:bg-stone-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-base">person</span>
+                        <span>Call Parent ({emergency.userName})</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingVetNote(!isAddingVetNote)}
+                        className="py-2 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-base">note_add</span>
+                        <span>{isAddingVetNote ? 'Close Instructions' : 'Add Clinical Instructions'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Inline Doctor's Instructions Input */}
+                  {isAddingVetNote && (
+                    <div className="bg-stone-800 p-3 rounded-2xl space-y-2 text-xs border border-stone-700">
+                      <span className="font-bold text-blue-300">Prescribe Tele-Emergency Directives for Van Tech</span>
+                      <textarea
+                        rows={2}
+                        value={vetNoteInput}
+                        onChange={(e) => setVetNoteInput(e.target.value)}
+                        placeholder="e.g. Keep pressure on wound with sterile gauze. Elevate hind limb slightly during transport..."
+                        className="w-full p-2.5 bg-stone-900 text-white rounded-xl border border-stone-600 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (vetNoteInput) {
+                            emergencyStore.addClinicalNotes(`[Dr. Mehta Directive]: ${vetNoteInput}`);
+                            setVetNoteInput('');
+                            setIsAddingVetNote(false);
+                            showToast('Doctor directives transmitted to Mobile Unit #1.');
+                          }
+                        }}
+                        className="py-1.5 px-4 bg-blue-500 text-white font-bold rounded-xl text-xs hover:bg-blue-400"
+                      >
+                        Transmit Instructions to Van
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Executive Metrics */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white rounded-3xl p-5 border border-[#dac2ae]/50 shadow-2xs space-y-1">
