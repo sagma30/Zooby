@@ -54,3 +54,12 @@ export function generateNotificationId(): string {
 export function generateProviderId(): string {
   return `prov-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
+
+export function generateIncidentId(): string {
+  return `sos-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+export function generateVanId(): string {
+  return `van-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+}
+

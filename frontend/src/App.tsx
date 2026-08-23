@@ -47,6 +47,9 @@ import { BookingModal } from './components/BookingModal';
 import { InboxModal } from './components/InboxModal';
 import { AddPetModal } from './components/AddPetModal';
 import { MobileNavBar } from './components/MobileNavBar';
+import { RapidVanSOSModal } from './components/emergency/RapidVanSOSModal';
+import { VanLocation } from './types';
+import { subscribeToVanLocationStream } from './services/gpsTracking';
 
 function ZoobyAppInner() {
   const { user, role, isAuthenticated, logout } = useAuth();
@@ -156,14 +159,28 @@ function ZoobyAppInner() {
     localStorage.setItem('zooby_payments', JSON.stringify(payments));
   }, [payments]);
 
-  // Modal States
+  // Modals state
   const [isAddHealthEventOpen, setIsAddHealthEventOpen] = useState(false);
-  const [healthEventPet, setHealthEventPet] = useState<Pet>(selectedPet);
+  const [healthEventPet, setHealthEventPet] = useState<Pet | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [bookingProvider, setBookingProvider] = useState<ServiceProvider | null>(null);
+  const [bookingProvider, setBookingProvider] = useState<ServiceProvider>(SERVICE_PROVIDERS[0]);
   const [isInboxModalOpen, setIsInboxModalOpen] = useState(false);
   const [isAddPetModalOpen, setIsAddPetModalOpen] = useState(false);
   const [editPetTarget, setEditPetTarget] = useState<Pet | null>(null);
+
+  // 🔴 24/7 Rapid SOS & Live Van Location State
+  const [isSOSModalOpen, setIsSOSModalOpen] = useState(false);
+  const [liveVanLocation, setLiveVanLocation] = useState<VanLocation | null>(null);
+
+  // Subscribe to real-time van updates
+  useEffect(() => {
+    const unsubscribe = subscribeToVanLocationStream((loc) => {
+      setLiveVanLocation(loc);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Sync selected pet if updated in array
   useEffect(() => {
@@ -739,6 +756,7 @@ function ZoobyAppInner() {
           setEditPetTarget(null);
           setIsAddPetModalOpen(true);
         }}
+        onOpenSOS={() => setIsSOSModalOpen(true)}
         currentUser={user}
         onOpenSignIn={() => navigate('/login')}
         onSignOut={() => logout('/login')}
@@ -762,6 +780,8 @@ function ZoobyAppInner() {
             }}
             agenda={agenda}
             updates={updates}
+            activeVanLocation={liveVanLocation}
+            onOpenSOS={() => setIsSOSModalOpen(true)}
           />
         )}
 
@@ -919,6 +939,25 @@ function ZoobyAppInner() {
         }}
         onSavePet={handleSavePet}
         editPet={editPetTarget}
+      />
+
+      {/* 🔴 24/7 Rapid SOS Emergency Modal */}
+      <RapidVanSOSModal
+        isOpen={isSOSModalOpen}
+        onClose={() => setIsSOSModalOpen(false)}
+        currentUser={user}
+        pets={pets}
+        onSOSDispatched={(incident) => {
+          // Add instant alert update for pet parent
+          const sosUpdate: NotificationUpdate = {
+            id: 'sos-up-' + Date.now(),
+            text: `🚨 24/7 Rapid SOS Dispatched! Unit ${incident.assignedVanPlate || 'Unit #1'} is en route for ${incident.petName || 'your pet'}.`,
+            time: 'Just now',
+            type: 'health',
+            read: false
+          };
+          setUpdates((prev) => [sosUpdate, ...prev]);
+        }}
       />
 
       {/* Demo Persona Switcher floating pill */}

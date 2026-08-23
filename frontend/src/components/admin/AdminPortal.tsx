@@ -11,6 +11,7 @@ import {
   VerificationReviewModal
 } from './AdminModals';
 import { AdminPaymentsView } from './AdminPaymentsView';
+import { AdminEmergencyView } from './AdminEmergencyView';
 import { INITIAL_ADMIN_USERS } from '../../data/adminMockData';
 import { AdminUser, ProviderVerification, PaymentRecord } from '../../types';
 
@@ -253,6 +254,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               }}
               onToggleSuspend={handleToggleUserStatus}
             />
+          )}
+
+          {currentTab === 'emergency' && (
+            <div className="p-6 md:p-8 max-w-7xl mx-auto">
+              <AdminEmergencyView />
+            </div>
           )}
 
           {/* Additional Admin Sections (Pets, Providers, Bookings, Analytics, etc.) */}

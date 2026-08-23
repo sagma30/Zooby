@@ -1,6 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { VanJob, UserProfile, PetCareRecord } from '../../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { VanJob, UserProfile, PetCareRecord, EmergencyIncident } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { ZoobyRealMap } from '../common/ZoobyRealMap';
+import {
+  watchDeviceLocation,
+  pushVanLocationUpdate,
+  GeoCoordinates,
+  calculateDistanceKm,
+  calculateTravelEtaMinutes
+} from '../../services/gpsTracking';
 
 interface VanWorkerPortalProps {
   user?: UserProfile;
@@ -23,6 +31,8 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
   onNavigate
 }) => {
   const { user: authUser, logout } = useAuth();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('zooby_auth_token') || undefined : undefined;
+
   const activeUser = propUser || authUser || {
     id: 'usr-van-vikram',
     name: 'Vikram Pawar',
@@ -40,6 +50,68 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
   const [simulatedDirections, setSimulatedDirections] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
+  const safeJobs = jobs || [];
+  const activeJobs = safeJobs.filter((j) => j.status !== 'Service Completed');
+  const completedJobs = safeJobs.filter((j) => j.status === 'Service Completed');
+  const nextScheduledJob = activeJobs[0] || null;
+
+  // --- Real Device Geolocation Tracking State ---
+  const [isGpsActive, setIsGpsActive] = useState<boolean>(true);
+  const [deviceCoords, setDeviceCoords] = useState<GeoCoordinates | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [incomingEmergency, setIncomingEmergency] = useState<EmergencyIncident | null>(null);
+
+  // --- Continuous Real Geolocation Watcher ---
+  useEffect(() => {
+    if (!isGpsActive) return;
+
+    const stopWatching = watchDeviceLocation(
+      (coords) => {
+        setDeviceCoords(coords);
+        setGpsError(null);
+        // Push genuine device coordinates to backend
+        pushVanLocationUpdate('van-nashik-01', coords, token, {
+          workerName: activeUser.name,
+          trackingStatus: 'ACTIVE',
+          currentJobId: nextScheduledJob?.id,
+          currentEmergencyId: incomingEmergency?.incidentId
+        });
+      },
+      (err) => {
+        console.warn('Van worker geolocation error:', err);
+        setGpsError(err.message || 'GPS location unavailable');
+      }
+    );
+
+    return () => {
+      stopWatching();
+    };
+  }, [isGpsActive, token, activeUser.name, nextScheduledJob?.id, incomingEmergency?.incidentId]);
+
+  // --- Listen for incoming emergency dispatches ---
+  useEffect(() => {
+    const fetchActiveEmergency = async () => {
+      try {
+        const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api/v1';
+        const res = await fetch(`${API_BASE_URL}/emergency/active`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            setIncomingEmergency(json.data);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchActiveEmergency();
+    const interval = setInterval(fetchActiveEmergency, 10000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   // Sync tab if currentTab prop changes from external router
   useEffect(() => {
     if (currentTab) {
@@ -55,11 +127,6 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
     temperature: '101.4°F (Normal)',
     behaviorNote: 'Calm and happy during warm air blow drying'
   });
-
-  const safeJobs = jobs || [];
-  const activeJobs = safeJobs.filter((j) => j.status !== 'Service Completed');
-  const completedJobs = safeJobs.filter((j) => j.status === 'Service Completed');
-  const nextScheduledJob = activeJobs[0] || null;
 
   const showNotification = (msg: string) => {
     setActionNotice(msg);
@@ -143,10 +210,38 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
 
         {/* Right Status & Logout */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 bg-stone-800 px-3 py-1.5 rounded-full text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-stone-300">Live Van GPS Active</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsGpsActive(!isGpsActive)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              isGpsActive
+                ? gpsError
+                  ? 'bg-amber-950 text-amber-300 border border-amber-500'
+                  : 'bg-stone-800 text-emerald-300 border border-emerald-500/50 hover:bg-stone-700'
+                : 'bg-stone-800 text-stone-400 border border-stone-600 hover:bg-stone-700'
+            }`}
+            title={isGpsActive ? 'Click to Pause GPS Tracking' : 'Click to Resume GPS Tracking'}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isGpsActive
+                  ? gpsError
+                    ? 'bg-amber-400'
+                    : 'bg-emerald-400 animate-pulse'
+                  : 'bg-stone-500'
+              }`}
+            />
+            <span className="hidden sm:inline">
+              {isGpsActive
+                ? gpsError
+                  ? 'GPS Permission Pending'
+                  : deviceCoords
+                  ? `Live GPS Active (±${Math.round(deviceCoords.accuracy || 10)}m)`
+                  : 'Acquiring GPS...'
+                : 'Tracking Paused'}
+            </span>
+            <span className="sm:hidden">{isGpsActive ? 'GPS On' : 'GPS Off'}</span>
+          </button>
           <button
             onClick={() => logout('/')}
             className="p-2 text-stone-400 hover:text-rose-400 transition-colors cursor-pointer flex items-center gap-1 text-xs"
@@ -159,6 +254,81 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
       </header>
 
       {/* Action Toast Notification */}
+      {/* 🚨 High-Priority Emergency Dispatch Alert Banner */}
+      {incomingEmergency && incomingEmergency.status !== 'RESOLVED' && incomingEmergency.status !== 'CANCELLED' && (
+        <div className="bg-rose-600 text-white px-4 md:px-8 py-3.5 shadow-lg border-b-2 border-rose-700 animate-in slide-in-from-top-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white text-rose-600 flex items-center justify-center font-bold animate-pulse shrink-0">
+              <span className="material-symbols-outlined text-2xl filled-icon">emergency</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-quicksand font-bold text-sm uppercase tracking-wider bg-rose-800 px-2 py-0.5 rounded-md">
+                  Rapid SOS Alert
+                </span>
+                <span className="text-xs font-bold text-rose-100">
+                  Priority: {incomingEmergency.triage.urgency}
+                </span>
+              </div>
+              <p className="text-xs font-medium text-white mt-0.5">
+                <strong>{incomingEmergency.petName || 'Pet'} ({incomingEmergency.petBreed || 'Animal'})</strong> • {incomingEmergency.category.replace('_', ' ')} • {incomingEmergency.location.address || 'Nashik'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {incomingEmergency.userPhone && (
+              <a
+                href={`tel:${incomingEmergency.userPhone}`}
+                className="py-1.5 px-3 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[15px]">call</span>
+                <span>Call Parent</span>
+              </a>
+            )}
+
+            {incomingEmergency.status === 'RESOURCE_ASSIGNED' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIncomingEmergency((prev) => prev ? { ...prev, status: 'EN_ROUTE' } : null);
+                  showNotification('Accepted emergency dispatch! Navigating to emergency scene.');
+                }}
+                className="py-1.5 px-4 rounded-xl bg-white text-rose-700 font-extrabold text-xs shadow-md hover:bg-rose-50 transition-all cursor-pointer"
+              >
+                Accept &amp; Navigate
+              </button>
+            )}
+
+            {incomingEmergency.status === 'EN_ROUTE' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIncomingEmergency((prev) => prev ? { ...prev, status: 'ARRIVED' } : null);
+                  showNotification('Arrived at emergency scene. Administering care.');
+                }}
+                className="py-1.5 px-4 rounded-xl bg-emerald-500 text-white font-extrabold text-xs shadow-md hover:bg-emerald-600 transition-all cursor-pointer"
+              >
+                Mark Arrived at Scene
+              </button>
+            )}
+
+            {incomingEmergency.status === 'ARRIVED' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIncomingEmergency((prev) => prev ? { ...prev, status: 'RESOLVED' } : null);
+                  showNotification('Emergency care completed & resolved.');
+                }}
+                className="py-1.5 px-4 rounded-xl bg-emerald-500 text-white font-extrabold text-xs shadow-md hover:bg-emerald-600 transition-all cursor-pointer"
+              >
+                Resolve Emergency
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {actionNotice && (
         <div className="sticky top-[60px] z-40 bg-amber-500 text-black px-4 py-2 text-xs font-bold text-center shadow-md animate-in slide-in-from-top-2 flex items-center justify-center gap-2">
           <span className="material-symbols-outlined text-[16px]">check_circle</span>
@@ -759,8 +929,53 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
               )}
             </div>
 
-            {/* Right Col: Van Telemetry & Quick Directions */}
+            {/* Right Col: Live Interactive Route Map & Van Diagnostics */}
             <div className="space-y-4">
+              {/* Live Interactive Route Map */}
+              <div className="bg-white rounded-2xl border border-[#e6e2dd] p-4 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[#1b1c1a] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-[#895100]">map</span>
+                    <span>Live Route GPS Map</span>
+                  </h3>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    {deviceCoords ? 'Live GPS' : 'Hub GPS'}
+                  </span>
+                </div>
+
+                <ZoobyRealMap
+                  height="260px"
+                  vanPosition={{
+                    lat: deviceCoords?.latitude ?? 19.9975,
+                    lng: deviceCoords?.longitude ?? 73.7898,
+                    heading: deviceCoords?.heading,
+                    plate: activeUser.assignedVanPlate || 'MH 15 ZB 4022',
+                    status: 'Active Route'
+                  }}
+                  stops={[
+                    { id: '1', lat: 20.0055, lng: 73.7650, title: 'Gangapur Rd', petName: 'Bruno', sequence: 1 },
+                    { id: '2', lat: 19.9980, lng: 73.7840, title: 'College Rd', petName: 'Rocky', sequence: 2 },
+                    { id: '3', lat: 19.9700, lng: 73.7750, title: 'Indira Nagar', petName: 'Milo', sequence: 3 }
+                  ]}
+                  showRouteLine={true}
+                  zoom={13}
+                />
+
+                {nextScheduledJob && (
+                  <div className="p-2.5 rounded-xl bg-[#fbf9f5] border border-[#efeeea] flex items-center justify-between text-xs">
+                    <span className="text-[#716153]">Next: <strong>{nextScheduledJob.petName}</strong></span>
+                    <strong className="text-[#895100]">
+                      {calculateDistanceKm(
+                        deviceCoords?.latitude ?? 19.9975,
+                        deviceCoords?.longitude ?? 73.7898,
+                        20.0055,
+                        73.7650
+                      )} km away
+                    </strong>
+                  </div>
+                )}
+              </div>
+
               {simulatedDirections && (
                 <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 space-y-2 animate-fade-in">
                   <div className="flex items-center justify-between font-bold">

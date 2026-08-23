@@ -10,6 +10,7 @@ interface HeaderProps {
   unreadCount: number;
   onOpenNotifications: () => void;
   onOpenAddPet: () => void;
+  onOpenSOS?: () => void;
   currentUser: UserProfile | null;
   onOpenSignIn: () => void;
   onSignOut: () => void;
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   unreadCount = 0,
   onOpenNotifications,
   onOpenAddPet,
+  onOpenSOS,
   currentUser,
   onOpenSignIn,
   onSignOut
@@ -203,6 +205,19 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
+
+          {/* 🔴 24/7 Rapid SOS Emergency Button */}
+          {onOpenSOS && (
+            <button
+              id="header-sos-btn"
+              onClick={onOpenSOS}
+              className="py-1.5 px-3 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all cursor-pointer ring-2 ring-rose-300 animate-pulse"
+              title="24/7 Rapid Van SOS Emergency Dispatch"
+            >
+              <span className="material-symbols-outlined text-[16px] filled-icon">emergency</span>
+              <span className="font-extrabold tracking-wide">SOS</span>
+            </button>
+          )}
 
           {/* Notifications Button */}
           <button

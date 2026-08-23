@@ -19,6 +19,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'grid_view' },
+    { id: 'emergency', label: 'Rapid SOS & Telemetry', icon: 'emergency' },
     { id: 'users', label: 'Users', icon: 'group' },
     { id: 'pets', label: 'Pets', icon: 'pets' },
     { id: 'providers', label: 'Service Providers', icon: 'medical_services' },

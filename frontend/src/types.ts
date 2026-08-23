@@ -393,4 +393,131 @@ export interface AdminDashboardBooking {
   status: 'Confirmed' | 'Completed' | 'Pending' | 'Cancelled';
 }
 
+// ----------------------------------------------------
+// REAL-TIME VAN GPS TRACKING & RAPID SOS MODELS
+// ----------------------------------------------------
+
+export type VanTrackingStatus = 'ACTIVE' | 'PAUSED' | 'OFFLINE';
+
+export interface VanLocation {
+  vanId: string;
+  vanPlate: string;
+  workerId: string;
+  workerName: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  heading?: number;
+  speed?: number;
+  altitude?: number;
+  timestamp: string | Date;
+  trackingStatus: VanTrackingStatus;
+  currentJobId?: string;
+  currentEmergencyId?: string;
+  batteryLevel?: number;
+  isEmergencyAvailable: boolean;
+  lastUpdated: string | Date;
+}
+
+export type EmergencyCategory =
+  | 'injury_bleeding'
+  | 'breathing_problem'
+  | 'unconscious_unresponsive'
+  | 'possible_poisoning'
+  | 'accident_trauma'
+  | 'severe_pain'
+  | 'severe_illness'
+  | 'lost_injured_animal'
+  | 'other';
+
+export type EmergencyUrgency = 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW';
+
+export type EmergencyStatus =
+  | 'CREATED'
+  | 'LOCATION_PENDING'
+  | 'LOCATION_CONFIRMED'
+  | 'TRIAGE_ACTIVE'
+  | 'TRIAGE_COMPLETED'
+  | 'DISPATCH_SEARCHING'
+  | 'RESOURCE_ASSIGNED'
+  | 'DISPATCH_CONFIRMED'
+  | 'EN_ROUTE'
+  | 'ARRIVED'
+  | 'IN_CARE'
+  | 'RESOLVED'
+  | 'CANCELLED'
+  | 'NO_RESOURCE_AVAILABLE'
+  | 'LOCATION_UNAVAILABLE'
+  | 'UNABLE_TO_DISPATCH';
+
+export interface EmergencyLocation {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  address?: string;
+  landmark?: string;
+}
+
+export interface EmergencyTriageDetails {
+  urgency: EmergencyUrgency;
+  summary: string;
+  primaryConcern: string;
+  firstAidAdvice: string[];
+  suggestedAction: string;
+  isLifeThreatening: boolean;
+  triageModel: string;
+  triagedAt: string | Date;
+}
+
+export interface EmergencyStatusLog {
+  status: EmergencyStatus;
+  timestamp: string | Date;
+  note?: string;
+  updatedBy: string;
+}
+
+export interface EmergencyIncident {
+  incidentId: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  userEmail?: string;
+  
+  petId?: string;
+  petName?: string;
+  petSpecies?: string;
+  petBreed?: string;
+  petAge?: string;
+  
+  category: EmergencyCategory;
+  description: string;
+  audioTranscript?: string;
+  
+  location: EmergencyLocation;
+  triage: EmergencyTriageDetails;
+  
+  assignedVanId?: string;
+  assignedVanPlate?: string;
+  assignedWorkerId?: string;
+  assignedWorkerName?: string;
+  assignedWorkerPhone?: string;
+  
+  status: EmergencyStatus;
+  statusHistory: EmergencyStatusLog[];
+  
+  etaMinutes?: number;
+  distanceKm?: number;
+  
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  acceptedAt?: string | Date;
+  enRouteAt?: string | Date;
+  arrivedAt?: string | Date;
+  resolvedAt?: string | Date;
+  cancelledAt?: string | Date;
+  
+  resolutionNotes?: string;
+}
+
+
 

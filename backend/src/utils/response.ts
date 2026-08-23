@@ -8,6 +8,8 @@ export function successResponse(res: Response, data: any, message?: string, stat
   });
 }
 
+export const sendSuccess = successResponse;
+
 export function errorResponse(res: Response, statusCode: number, message: string, code: string, errors?: any[]) {
   const response: any = {
     success: false,

@@ -5,6 +5,8 @@ import petRoutes from './pets';
 import healthEventRoutes from './healthEvents';
 import providerRoutes from './providers';
 import bookingRoutes from './bookings';
+import vanLocationRoutes from './vanLocations';
+import emergencyRoutes from './emergency';
 
 const router = Router();
 
@@ -14,5 +16,7 @@ router.use('/pets', petRoutes);
 router.use('/', healthEventRoutes); // Health events routes have pets/:petId prefix
 router.use('/providers', providerRoutes);
 router.use('/bookings', bookingRoutes);
+router.use('/vans', vanLocationRoutes);
+router.use('/emergency', emergencyRoutes);
 
 export default router;

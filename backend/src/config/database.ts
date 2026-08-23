@@ -131,6 +131,24 @@ async function createIndexes(database: Db): Promise<void> {
       { key: { createdAt: 1 } },
     ]);
 
+    // Van Locations indexes
+    await database.collection('van_locations').createIndexes([
+      { key: { vanId: 1 }, unique: true },
+      { key: { workerId: 1 } },
+      { key: { trackingStatus: 1 } },
+      { key: { isEmergencyAvailable: 1 } },
+    ]);
+
+    // Emergency Incidents indexes
+    await database.collection('emergency_incidents').createIndexes([
+      { key: { incidentId: 1 }, unique: true },
+      { key: { userId: 1 } },
+      { key: { assignedWorkerId: 1 } },
+      { key: { assignedVanId: 1 } },
+      { key: { status: 1 } },
+      { key: { createdAt: 1 } },
+    ]);
+
     console.log('✅ Database indexes created');
   } catch (error) {
     console.error('⚠️  Index creation warning:', error);

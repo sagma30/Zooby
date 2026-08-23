@@ -1,5 +1,7 @@
 import React from 'react';
-import { Pet, AgendaItem, NotificationUpdate, ServiceCategory } from '../types';
+import { Pet, AgendaItem, NotificationUpdate, ServiceCategory, VanLocation, Booking } from '../types';
+import { ZoobyRealMap } from './common/ZoobyRealMap';
+import { calculateDistanceKm, calculateTravelEtaMinutes } from '../services/gpsTracking';
 
 interface DashboardViewProps {
   pets: Pet[];
@@ -10,6 +12,9 @@ interface DashboardViewProps {
   onOpenAddPet: () => void;
   agenda: AgendaItem[];
   updates: NotificationUpdate[];
+  activeVanLocation?: VanLocation | null;
+  activeBooking?: Booking | null;
+  onOpenSOS?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -20,7 +25,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenAddHealthEvent,
   onOpenAddPet,
   agenda,
-  updates
+  updates,
+  activeVanLocation,
+  activeBooking,
+  onOpenSOS
 }) => {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-6 md:py-10 space-y-10 animate-fade-in">
@@ -211,6 +219,107 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Right Column: Upcoming Agenda & Recent Updates */}
         <div className="lg:col-span-4 space-y-6">
+          {/* 🔴 24/7 Rapid Van SOS Quick Action Card */}
+          {onOpenSOS && (
+            <div className="bg-gradient-to-r from-rose-600 to-red-600 rounded-2xl p-4 text-white shadow-md flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold animate-pulse">
+                  <span className="material-symbols-outlined text-2xl filled-icon">emergency</span>
+                </div>
+                <div>
+                  <h3 className="font-quicksand font-bold text-base leading-tight">24/7 Rapid Van SOS</h3>
+                  <p className="text-[11px] text-rose-100">AI Triage &amp; Instant Emergency Dispatch</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenSOS}
+                className="py-2 px-3.5 rounded-xl bg-white text-rose-700 font-extrabold text-xs shadow-xs hover:bg-rose-50 transition-all cursor-pointer active:scale-95 shrink-0"
+              >
+                Trigger SOS
+              </button>
+            </div>
+          )}
+
+          {/* 🚐 "Your Zooby Van" Live Real-time GPS Tracking Card */}
+          <div className="bg-white rounded-2xl p-5 border border-[#e5e0d8] shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 text-[#895100] flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-lg">local_shipping</span>
+                </div>
+                <div>
+                  <h2 className="font-quicksand font-bold text-base text-[#1b1c1a] leading-tight">
+                    Your Zooby Van
+                  </h2>
+                  <span className="text-[11px] text-[#716153]">
+                    {activeVanLocation?.vanPlate || 'MH 15 ZB 4022 (Unit #1)'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Pill */}
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{activeVanLocation?.trackingStatus === 'ACTIVE' ? 'Live GPS En Route' : 'Scheduled'}</span>
+              </span>
+            </div>
+
+            {/* Interactive Leaflet GPS Map */}
+            <ZoobyRealMap
+              height="190px"
+              userPosition={{
+                lat: 20.0055, // Pet Parent Doorstep (Gangapur Road, Nashik)
+                lng: 73.7650,
+                title: 'Your Doorstep (Bruno)'
+              }}
+              vanPosition={{
+                lat: activeVanLocation?.latitude ?? 19.9975, // Live Van Coordinates
+                lng: activeVanLocation?.longitude ?? 73.7898,
+                plate: activeVanLocation?.vanPlate || 'MH 15 ZB 4022',
+                status: 'En Route'
+              }}
+              showRouteLine={true}
+              zoom={13}
+            />
+
+            {/* Real Distance & Calculated ETA Banner */}
+            <div className="p-3 bg-[#fbf9f5] rounded-xl border border-[#efeeea] flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[#877462] block text-[10px] uppercase font-bold">Driver / Tech</span>
+                <strong className="text-[#1b1c1a]">{activeVanLocation?.workerName || 'Vikram Pawar'}</strong>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[#877462] block text-[10px] uppercase font-bold">Estimated Arrival</span>
+                <strong className="text-[#895100] text-sm font-bold">
+                  {calculateTravelEtaMinutes(
+                    calculateDistanceKm(
+                      20.0055,
+                      73.7650,
+                      activeVanLocation?.latitude ?? 19.9975,
+                      activeVanLocation?.longitude ?? 73.7898
+                    )
+                  )
+                    ? `${calculateTravelEtaMinutes(
+                        calculateDistanceKm(
+                          20.0055,
+                          73.7650,
+                          activeVanLocation?.latitude ?? 19.9975,
+                          activeVanLocation?.longitude ?? 73.7898
+                        )
+                      )} mins (${calculateDistanceKm(
+                        20.0055,
+                        73.7650,
+                        activeVanLocation?.latitude ?? 19.9975,
+                        activeVanLocation?.longitude ?? 73.7898
+                      )} km)`
+                    : 'ETA unavailable'}
+                </strong>
+              </div>
+            </div>
+          </div>
+
           {/* Upcoming Agenda Card */}
           <div className="bg-white rounded-2xl p-6 border border-[#e5e0d8] shadow-xs">
             <h2 className="font-quicksand font-bold text-xl text-[#1b1c1a] mb-5 flex items-center gap-2">
