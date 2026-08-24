@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { DEMO_USERS } from '../../data/authDemoData';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface CustomerAuthViewProps {
-  initialMode?: 'signin' | 'signup';
   onNavigate: (path: string) => void;
+  initialMode?: 'signin' | 'signup' | 'forgot';
 }
 
 export const CustomerAuthView: React.FC<CustomerAuthViewProps> = ({
-  initialMode = 'signin',
-  onNavigate
+  onNavigate,
+  initialMode = 'signin'
 }) => {
   const { login, signup, loginDemo, isLoading } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(initialMode);
@@ -24,19 +24,15 @@ export const CustomerAuthView: React.FC<CustomerAuthViewProps> = ({
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    if (!emailOrPhone) {
-      setErrorMessage('Please enter your email or phone.');
-      return;
-    }
-    if (!password) {
-      setErrorMessage('Please enter your password.');
+    if (!emailOrPhone || !password) {
+      setErrorMessage('Please provide both your registered contact and password.');
       return;
     }
     try {
-      await login(emailOrPhone, 'PET_PARENT');
+      await login(emailOrPhone, password);
       onNavigate('/dashboard');
     } catch (err: any) {
-      setErrorMessage('Login failed. Please verify your credentials.');
+      setErrorMessage(err?.message || 'Invalid credentials. Please try again.');
     }
   };
 
@@ -44,19 +40,19 @@ export const CustomerAuthView: React.FC<CustomerAuthViewProps> = ({
     e.preventDefault();
     setErrorMessage('');
     if (!fullName || !emailOrPhone || !password) {
-      setErrorMessage('Please fill in all required fields.');
+      setErrorMessage('Please complete all required fields.');
       return;
     }
     try {
       await signup({
         name: fullName,
         email: emailOrPhone.includes('@') ? emailOrPhone : `${emailOrPhone}@zooby.care`,
-        phone: !emailOrPhone.includes('@') ? emailOrPhone : '+91 98201 23456',
+        phone: !emailOrPhone.includes('@') ? emailOrPhone : undefined,
         role: 'PET_PARENT'
       });
       onNavigate('/dashboard');
-    } catch (err: any) {
-      setErrorMessage('Registration failed. Please try again.');
+    } catch (err) {
+      setErrorMessage('Registration failed. Please try a different email.');
     }
   };
 
@@ -65,43 +61,39 @@ export const CustomerAuthView: React.FC<CustomerAuthViewProps> = ({
       await loginDemo('PET_PARENT');
       onNavigate('/dashboard');
     } catch (err) {
-      setErrorMessage('Demo login failed');
+      setErrorMessage('Demo login failed.');
     }
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailOrPhone) {
-      setErrorMessage('Enter your email or phone to reset password.');
+      setErrorMessage('Please enter your email or phone.');
       return;
     }
-    setInfoMessage(`Password reset link sent to ${emailOrPhone}`);
+    setInfoMessage('Reset instructions sent! Check your email or SMS.');
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#fcfbfa] font-jakarta selection:bg-[#ffdcbc] selection:text-[#683c00]">
-      {/* Left Column: Pet Parent Lifestyle & Brand */}
-      <div className="relative w-full lg:w-1/2 min-h-[320px] lg:min-h-screen bg-[#f3eee8] overflow-hidden flex flex-col justify-between p-8 md:p-12">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#fbf9f5] font-jakarta text-[#1b1c1a] selection:bg-[#ffdcbc] selection:text-[#683c00]">
+      {/* Left Column: Visual Storytelling */}
+      <div className="relative w-full lg:w-1/2 min-h-[300px] lg:min-h-screen bg-[#3d2f21] overflow-hidden flex flex-col justify-between p-8 md:p-12 text-white">
         <img
-          src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=1400"
-          alt="Happy pet parent with golden retriever"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=1200"
+          alt="Happy dog with loving owner"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-85"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 pointer-events-none" />
 
-        {/* Brand Header */}
+        {/* Top Logo */}
         <div className="relative z-10 flex items-center justify-between">
-          <button
+          <ZoobyLogo
+            size="md"
+            variant="dark"
+            subtitle="Pet Parent Portal"
+            clickable={true}
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-2.5 text-white hover:opacity-90 transition-opacity cursor-pointer text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#895100] text-white flex items-center justify-center font-bold text-xl shadow-md">
-              <span className="material-symbols-outlined text-[22px] filled-icon">pets</span>
-            </div>
-            <span className="font-quicksand font-bold text-2xl tracking-tight text-white">
-              Zooby
-            </span>
-          </button>
+          />
 
           <button
             onClick={() => onNavigate('/')}

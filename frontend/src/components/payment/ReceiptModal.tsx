@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { PaymentRecord } from '../../types';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   onClose,
   payment
 }) => {
+  const receiptRef = useRef<HTMLDivElement | null>(null);
+
   if (!isOpen || !payment) return null;
 
   const handlePrint = () => {
@@ -25,7 +28,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-[620px] rounded-3xl shadow-2xl border border-[#e5e0d8] overflow-hidden my-auto animate-in zoom-in-95 duration-200 print:shadow-none print:border-none print:m-0 print:max-w-none">
+      <div ref={receiptRef} className="bg-white w-full max-w-[620px] rounded-3xl shadow-2xl border border-[#e5e0d8] overflow-hidden my-auto animate-in zoom-in-95 duration-200 print:shadow-none print:border-none print:m-0 print:max-w-none">
         {/* Modal Top Bar (Hidden during print) */}
         <div className="px-6 py-4 bg-[#fbf9f5] border-b border-[#efeeea] flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
@@ -62,20 +65,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         <div className="p-6 sm:p-8 space-y-6 text-[#1b1c1a] bg-white">
           {/* Header Brand & Status */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-[#ebdcc4]">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#895100] text-white flex items-center justify-center font-bold text-xl shadow-xs">
-                <span className="material-symbols-outlined text-[26px]">pets</span>
-              </div>
-              <div>
-                <h1 className="font-quicksand font-bold text-2xl text-[#895100] leading-tight">
-                  Zooby Pet Care
-                </h1>
-                <p className="text-xs text-[#877462]">
-                  Nashik Verified Pet Health &amp; Mobile Van Network
-                </p>
-                <p className="text-[10px] text-[#877462]">GSTIN: 27AABCZ9921K1Z4 • CIN: U85100MH2024PTC192831</p>
-              </div>
-            </div>
+            <ZoobyLogo
+              size="md"
+              subtitle="Nashik Verified Pet Health & Mobile Van Network"
+            />
 
             <div className="text-left sm:text-right">
               <span

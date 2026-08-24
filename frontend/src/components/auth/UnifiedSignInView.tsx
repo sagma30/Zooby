@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { DEMO_USERS } from '../../data/authDemoData';
 import { UserRole } from '../../types';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface UnifiedSignInViewProps {
   onNavigate: (path: string) => void;
@@ -103,20 +104,13 @@ export const UnifiedSignInView: React.FC<UnifiedSignInViewProps> = ({ onNavigate
 
         {/* Brand Top Header */}
         <div className="relative z-10 flex items-center justify-between">
-          <button
+          <ZoobyLogo
+            size="md"
+            variant="dark"
+            subtitle="Unified Pet Care Ecosystem"
+            clickable={true}
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-2.5 cursor-pointer text-left group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-[#895100] text-white flex items-center justify-center font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[22px]">pets</span>
-            </div>
-            <div>
-              <span className="font-quicksand font-bold text-2xl tracking-tight text-white">
-                Zooby
-              </span>
-              <span className="text-[10px] text-amber-200 block">Unified Pet Care Ecosystem</span>
-            </div>
-          </button>
+          />
 
           <button
             onClick={() => onNavigate('/')}

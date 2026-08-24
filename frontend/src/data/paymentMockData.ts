@@ -5,6 +5,7 @@ export interface CouponDiscount {
   discountType: 'percentage' | 'fixed';
   value: number;
   description: string;
+  minAmount?: number;
 }
 
 export const VALID_COUPONS: Record<string, CouponDiscount> = {

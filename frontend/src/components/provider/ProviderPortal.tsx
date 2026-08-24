@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 import { UserSettingsView } from '../UserSettingsView';
 import { ProviderEarningsView } from './ProviderEarningsView';
 import { PaymentRecord } from '../../types';

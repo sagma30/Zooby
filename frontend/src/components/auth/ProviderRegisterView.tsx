@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ServiceCategory } from '../../types';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface ProviderRegisterViewProps {
   onNavigate: (path: string) => void;
@@ -54,17 +55,13 @@ export const ProviderRegisterView: React.FC<ProviderRegisterViewProps> = ({ onNa
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 pointer-events-none" />
 
         <div className="relative z-10 flex items-center justify-between">
-          <button
+          <ZoobyLogo
+            size="md"
+            variant="dark"
+            subtitle="Partner Network Registration"
+            clickable={true}
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-2.5 cursor-pointer text-left group"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#895100] text-white flex items-center justify-center font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[22px] filled-icon">pets</span>
-            </div>
-            <span className="font-quicksand font-bold text-2xl tracking-tight text-white">
-              Zooby
-            </span>
-          </button>
+          />
 
           <button
             onClick={() => onNavigate('/')}

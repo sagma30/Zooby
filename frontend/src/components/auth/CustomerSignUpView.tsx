@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface CustomerSignUpViewProps {
   onNavigate: (path: string) => void;
@@ -59,7 +60,7 @@ export const CustomerSignUpView: React.FC<CustomerSignUpViewProps> = ({ onNaviga
         onNavigate('/dashboard');
       }
     } catch (err: any) {
-      setErrorMessage('Registration could not be completed. Please try again.');
+      setErrorMessage(err?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -95,20 +96,13 @@ export const CustomerSignUpView: React.FC<CustomerSignUpViewProps> = ({ onNaviga
 
         {/* Brand Header */}
         <div className="relative z-10 flex items-center justify-between">
-          <button
+          <ZoobyLogo
+            size="md"
+            variant="dark"
+            subtitle="Pet Care Platform • Nashik"
+            clickable={true}
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-2.5 cursor-pointer text-left group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-[#895100] text-white flex items-center justify-center font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[22px]">pets</span>
-            </div>
-            <div>
-              <span className="font-quicksand font-bold text-2xl tracking-tight text-white">
-                Zooby
-              </span>
-              <span className="text-[10px] text-amber-200 block">Pet Care Platform • Nashik</span>
-            </div>
-          </button>
+          />
 
           <button
             onClick={() => onNavigate('/')}

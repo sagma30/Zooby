@@ -254,7 +254,7 @@ export interface UserProfile {
   email: string;
   phone?: string;
   profilePhoto?: string;
-  avatarUrl: string;
+  avatarUrl?: string;
   location: string;
   city?: string;
   role: UserRole;

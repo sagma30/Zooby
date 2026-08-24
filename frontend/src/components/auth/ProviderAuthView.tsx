@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { DEMO_USERS } from '../../data/authDemoData';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 import { ServiceCategory } from '../../types';
 
 interface ProviderAuthViewProps {
   onNavigate: (path: string) => void;
+  initialMode?: 'signin' | 'register';
 }
 
-export const ProviderAuthView: React.FC<ProviderAuthViewProps> = ({ onNavigate }) => {
+export const ProviderAuthView: React.FC<ProviderAuthViewProps> = ({ 
+  onNavigate,
+  initialMode = 'signin' 
+}) => {
   const { login, signup, loginDemo, isLoading } = useAuth();
-  const [mode, setMode] = useState<'signin' | 'register'>('signin');
+  const [mode, setMode] = useState<'signin' | 'register'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -78,22 +82,15 @@ export const ProviderAuthView: React.FC<ProviderAuthViewProps> = ({ onNavigate }
 
         {/* Top Header */}
         <div className="relative z-10 flex items-center justify-between">
-          <button
+          <ZoobyLogo
+            size="md"
+            variant="dark"
+            subtitle="Care Partner Network"
+            badgeText="Pro"
+            badgeColor="blue"
+            clickable={true}
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-2.5 text-left cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#ff9f1c] text-[#1b150e] flex items-center justify-center font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[22px] filled-icon">medical_services</span>
-            </div>
-            <div>
-              <span className="font-quicksand font-bold text-2xl tracking-tight text-white block">
-                Zooby Pro
-              </span>
-              <span className="text-[10px] tracking-widest uppercase font-bold text-[#ff9f1c]">
-                Provider Network
-              </span>
-            </div>
-          </button>
+          />
 
           <button
             onClick={() => onNavigate('/')}

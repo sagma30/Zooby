@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Pet,
   HealthEvent,
@@ -204,6 +204,72 @@ function ZoobyAppInner() {
       setSelectedPet(pets[0]);
     }
   }, [pets, selectedPet?.id]);
+
+  // ⚡ Intent Preservation Hook (Executed immediately after authentication)
+  useEffect(() => {
+    if (isAuthenticated) {
+      try {
+        const pendingRaw = sessionStorage.getItem('zooby_pending_intent');
+        if (pendingRaw) {
+          const intent = JSON.parse(pendingRaw);
+          sessionStorage.removeItem('zooby_pending_intent');
+
+          if (role === 'PET_PARENT' || !role) {
+            if (intent.action === 'book') {
+              const serviceId = intent.serviceCategory || 'mobile_grooming';
+              setBookingFlowCategory(serviceId);
+              setIsBookingFlowModalOpen(true);
+            } else if (intent.action === 'adopt') {
+              setActiveTab('adopt');
+              navigate('/adopt');
+            } else if (intent.action === 'sos') {
+              setIsSOSModalOpen(true);
+            } else if (intent.action === 'track_van') {
+              setActiveTab('dashboard');
+              navigate('/dashboard');
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to parse stored user intent:', err);
+      }
+    }
+  }, [isAuthenticated, role, navigate]);
+
+  // Scoped Data for Active Pet Parent (Declared at top level with other hooks)
+  const scopedPets = useMemo(() => {
+    if (!user || user.role !== 'PET_PARENT') return pets;
+    const userOwned = pets.filter(
+      (p) =>
+        p.ownerId === user.id ||
+        p.ownerId === user.userId ||
+        p.ownerName === user.name ||
+        p.ownerName === user.displayName
+    );
+    return userOwned.length > 0 ? userOwned : pets;
+  }, [pets, user]);
+
+  const scopedBookings = useMemo(() => {
+    if (!user || user.role !== 'PET_PARENT') return bookings;
+    const userOwned = bookings.filter(
+      (b) =>
+        b.userId === user.id ||
+        b.userId === user.userId ||
+        b.petParentId === user.id ||
+        b.petParentId === user.userId ||
+        b.petParentName === user.name ||
+        b.petParentName === user.displayName
+    );
+    return userOwned.length > 0 ? userOwned : bookings;
+  }, [bookings, user]);
+
+  const scopedAgenda = useMemo(() => {
+    if (!user || user.role !== 'PET_PARENT') return agenda;
+    const petNames = new Set(scopedPets.map((p) => p.name));
+    return agenda.filter((a) => !a.petName || petNames.has(a.petName));
+  }, [agenda, scopedPets, user]);
+
+  const activeCustomerPet = scopedPets.find((p) => p.id === selectedPet?.id) || scopedPets[0] || selectedPet;
 
   const unreadCount = (updates || []).filter((u) => !u.read).length;
 
@@ -761,41 +827,6 @@ function ZoobyAppInner() {
       : currentPath === '/settings' || currentPath === '/profile'
       ? 'settings'
       : activeTab;
-
-  // Scoped Data for Active Pet Parent
-  const scopedPets = React.useMemo(() => {
-    if (!user || user.role !== 'PET_PARENT') return pets;
-    const userOwned = pets.filter(
-      (p) =>
-        p.ownerId === user.id ||
-        p.ownerId === user.userId ||
-        p.ownerName === user.name ||
-        p.ownerName === user.displayName
-    );
-    return userOwned.length > 0 ? userOwned : pets;
-  }, [pets, user]);
-
-  const scopedBookings = React.useMemo(() => {
-    if (!user || user.role !== 'PET_PARENT') return bookings;
-    const userOwned = bookings.filter(
-      (b) =>
-        b.userId === user.id ||
-        b.userId === user.userId ||
-        b.petParentId === user.id ||
-        b.petParentId === user.userId ||
-        b.petParentName === user.name ||
-        b.petParentName === user.displayName
-    );
-    return userOwned.length > 0 ? userOwned : bookings;
-  }, [bookings, user]);
-
-  const scopedAgenda = React.useMemo(() => {
-    if (!user || user.role !== 'PET_PARENT') return agenda;
-    const petNames = new Set(scopedPets.map((p) => p.name));
-    return agenda.filter((a) => !a.petName || petNames.has(a.petName));
-  }, [agenda, scopedPets, user]);
-
-  const activeCustomerPet = scopedPets.find((p) => p.id === selectedPet?.id) || scopedPets[0] || selectedPet;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf9f5] text-[#1b1c1a] font-jakarta pb-16 md:pb-0 selection:bg-[#ffdcbc] selection:text-[#683c00]">

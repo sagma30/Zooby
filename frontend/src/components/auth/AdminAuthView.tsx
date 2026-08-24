@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface AdminAuthViewProps {
   onNavigate: (path: string) => void;
@@ -58,13 +59,14 @@ export const AdminAuthView: React.FC<AdminAuthViewProps> = ({ onNavigate }) => {
       {/* Admin Card */}
       <div className="w-full max-w-md bg-[#221c17] rounded-3xl p-8 border border-[#3e3227] shadow-2xl space-y-6">
         {/* Brand & Security Header */}
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#895100] text-white flex items-center justify-center shadow-lg border border-[#ffb86c]/30">
-            <span className="material-symbols-outlined text-3xl">admin_panel_settings</span>
-          </div>
-          <h1 className="font-quicksand font-bold text-2xl text-white">
-            Zooby Admin Console
-          </h1>
+        <div className="text-center space-y-3 flex flex-col items-center">
+          <ZoobyLogo
+            size="lg"
+            variant="dark"
+            subtitle="Platform Operations Console"
+            badgeText="Super Admin"
+            badgeColor="stone"
+          />
           <p className="text-xs text-[#a8998a]">
             Restricted access for platform administrators and system operators.
           </p>

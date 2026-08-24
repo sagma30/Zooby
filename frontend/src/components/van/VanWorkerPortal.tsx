@@ -202,20 +202,15 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
     <div className="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-jakarta pb-16 md:pb-8">
       {/* Mobile-Friendly Van Header */}
       <header className="sticky top-0 z-30 bg-[#1b1c1a] text-white px-4 md:px-8 py-3.5 flex items-center justify-between shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold shadow-xs">
-            <span className="material-symbols-outlined text-[24px]">local_shipping</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-quicksand font-bold text-lg text-amber-400">Zooby Van Fleet</span>
-              <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold">
-                {activeUser.assignedVanPlate || 'MH 15 ZB 4022'}
-              </span>
-            </div>
-            <p className="text-xs text-stone-400">{activeUser.name || 'Vikram Pawar'} • Lead Mobile Technician</p>
-          </div>
-        </div>
+        <ZoobyLogo
+          size="sm"
+          variant="dark"
+          subtitle={`${getUserDisplayName(activeUser, 'Rahul Sharma')} • Lead Mobile Technician`}
+          badgeText={activeUser.assignedVanPlate || 'ZMV-014'}
+          badgeColor="amber"
+          clickable={true}
+          onClick={() => setActiveTab('dashboard')}
+        />
 
         {/* Right Status & Logout */}
         <div className="flex items-center gap-3">

@@ -1,32 +1,32 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../types';
+import { UserProfile, UserRole } from '../types';
+import { ZoobyLogo } from './common/ZoobyLogo';
 
 interface SignInViewProps {
   onSignInSuccess: (user: UserProfile) => void;
+  onNavigateTab?: (tab: string) => void;
+  onNavigate?: (path: string) => void;
   onContinueAsGuest?: () => void;
 }
 
-export const SignInView: React.FC<SignInViewProps> = ({
-  onSignInSuccess,
-  onContinueAsGuest
-}) => {
+export const SignInView: React.FC<SignInViewProps> = ({ onSignInSuccess, onNavigateTab, onNavigate, onContinueAsGuest }) => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [petName, setPetName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setInfoMessage('');
 
-    if (!emailOrPhone) {
-      setErrorMessage('Please enter your email or phone number.');
+    if (!emailOrPhone.trim()) {
+      setErrorMessage('Please enter your email or mobile phone number.');
       return;
     }
     if (!password) {
@@ -35,19 +35,22 @@ export const SignInView: React.FC<SignInViewProps> = ({
     }
 
     setIsLoading(true);
+
     setTimeout(() => {
       setIsLoading(false);
       const user: UserProfile = {
-        id: 'usr-' + Date.now(),
-        name: emailOrPhone.includes('@') ? emailOrPhone.split('@')[0].replace('.', ' ') : 'Pet Parent',
-        email: emailOrPhone.includes('@') ? emailOrPhone : `${emailOrPhone}@zooby.care`,
-        phone: !emailOrPhone.includes('@') ? emailOrPhone : '+91 98201 45678',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160',
-        location: 'Bandra West, Mumbai',
+        id: 'usr-parent-sam',
+        name: 'Sam Sharma',
+        displayName: 'Sam Sharma',
+        firstName: 'Sam',
+        lastName: 'Sharma',
+        email: emailOrPhone.includes('@') ? emailOrPhone : 'sam@zooby.care',
+        phone: !emailOrPhone.includes('@') ? emailOrPhone : '+91 98220 11223',
+        location: 'Gangapur Road, Nashik',
         role: 'PET_PARENT'
       };
       onSignInSuccess(user);
-    }, 600);
+    }, 400);
   };
 
   const handleSignUp = (e: React.FormEvent) => {
@@ -55,94 +58,66 @@ export const SignInView: React.FC<SignInViewProps> = ({
     setErrorMessage('');
     setInfoMessage('');
 
-    if (!fullName || !emailOrPhone || !password) {
+    if (!fullName.trim() || !emailOrPhone.trim() || !password) {
       setErrorMessage('Please complete all required fields.');
       return;
     }
 
     setIsLoading(true);
+
     setTimeout(() => {
       setIsLoading(false);
       const user: UserProfile = {
-        id: 'usr-' + Date.now(),
-        name: fullName,
+        id: 'usr-parent-sam',
+        name: fullName.trim(),
+        displayName: fullName.trim(),
+        firstName: fullName.trim().split(' ')[0],
+        lastName: fullName.trim().split(' ').slice(1).join(' '),
         email: emailOrPhone.includes('@') ? emailOrPhone : `${emailOrPhone}@zooby.care`,
-        phone: !emailOrPhone.includes('@') ? emailOrPhone : '+91 98201 45678',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160',
-        location: 'Mumbai, MH',
+        phone: !emailOrPhone.includes('@') ? emailOrPhone : '+91 98220 11223',
+        location: 'Gangapur Road, Nashik',
         role: 'PET_PARENT'
       };
       onSignInSuccess(user);
-    }, 600);
+    }, 500);
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailOrPhone) {
+    setErrorMessage('');
+    setInfoMessage('');
+
+    if (!emailOrPhone.trim()) {
       setErrorMessage('Please enter your registered email or phone.');
       return;
     }
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setInfoMessage(`Password reset link has been sent to ${emailOrPhone}.`);
-    }, 500);
+
+    setInfoMessage(`We've sent a 6-digit verification code to ${emailOrPhone}.`);
   };
 
-  const handleGoogleSignIn = () => {
+  // Demo 1-click Quick Login
+  const handleQuickDemoLogin = (role: UserRole = 'PET_PARENT') => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
       const user: UserProfile = {
-        id: 'usr-google',
-        name: 'Rohan Deshmukh',
-        email: 'rohan.deshmukh@gmail.com',
-        phone: '+91 98201 23456',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160',
-        location: 'Bandra West, Mumbai',
-        role: 'PET_PARENT'
-      };
-      onSignInSuccess(user);
-    }, 500);
-  };
-
-  const handleAdminSignIn = () => {
-    setEmailOrPhone('admin@zooby.care');
-    setPassword('admin123');
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const adminUser: UserProfile = {
-        id: 'usr-admin',
-        name: 'Zooby Admin',
-        email: 'admin@zooby.care',
-        phone: '+91 98000 11223',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160',
-        location: 'Mumbai (HQ)',
-        role: 'ADMIN'
-      };
-      onSignInSuccess(adminUser);
-    }, 400);
-  };
-
-  const handleDemoSignIn = () => {
-    setEmailOrPhone('rohan.deshmukh@gmail.com');
-    setPassword('zooby123');
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const user: UserProfile = {
-        id: 'usr-demo',
-        name: 'Rohan Deshmukh',
-        email: 'rohan.deshmukh@gmail.com',
-        phone: '+91 98201 23456',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160',
-        location: 'Bandra West, Mumbai',
-        role: 'PET_PARENT'
+        id: 'usr-parent-sam',
+        name: 'Sam Sharma',
+        displayName: 'Sam Sharma',
+        firstName: 'Sam',
+        lastName: 'Sharma',
+        email: 'sam@zooby.care',
+        phone: '+91 98220 11223',
+        location: 'Gangapur Road, Nashik',
+        role
       };
       onSignInSuccess(user);
     }, 400);
   };
+
+  const handleGoogleSignIn = () => handleQuickDemoLogin('PET_PARENT');
+  const handleDemoSignIn = () => handleQuickDemoLogin('PET_PARENT');
+  const handleAdminSignIn = () => handleQuickDemoLogin('ADMIN');
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#fcfbfa] font-jakarta selection:bg-[#ffdcbc] selection:text-[#683c00]">
@@ -179,14 +154,12 @@ export const SignInView: React.FC<SignInViewProps> = ({
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 md:p-14 lg:p-16">
         <div className="w-full max-w-[440px] space-y-7">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#895100] text-white flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined text-[18px] filled-icon">pets</span>
-            </div>
-            <span className="font-quicksand font-bold text-2xl tracking-tight text-[#895100]">
-              Zooby
-            </span>
-          </div>
+          <ZoobyLogo
+            size="sm"
+            subtitle="Pet Care Platform"
+            clickable={true}
+            onClick={() => onNavigate ? onNavigate('/') : null}
+          />
 
           {/* Heading and Subtitle */}
           <div>

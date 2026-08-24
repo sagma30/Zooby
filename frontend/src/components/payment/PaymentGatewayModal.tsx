@@ -9,6 +9,7 @@ import {
 import { VALID_COUPONS, CouponDiscount } from '../../data/paymentMockData';
 import { useAuth } from '../../context/AuthContext';
 import { getUserDisplayName } from '../../utils/identity';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 export interface PaymentIntentDetails {
   bookingId?: string;
@@ -88,7 +89,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   
   let discountAmount = 0;
   if (appliedCoupon) {
-    if (appliedCoupon.type === 'percentage') {
+    if (appliedCoupon.discountType === 'percentage') {
       discountAmount = Math.round((basePrice * appliedCoupon.value) / 100);
     } else {
       discountAmount = appliedCoupon.value;
@@ -110,7 +111,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
     setCouponError(null);
     setCouponSuccess(null);
 
-    const found = VALID_COUPONS.find(
+    const found = Object.values(VALID_COUPONS).find(
       (c) => c.code.toLowerCase() === couponInput.trim().toLowerCase()
     );
 
@@ -267,25 +268,12 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
       <div className="bg-white w-full max-w-[760px] rounded-3xl shadow-2xl border border-[#e5e0d8] overflow-hidden my-auto animate-in zoom-in-95 duration-200">
         {/* Top Header */}
         <div className="px-6 py-4 bg-[#fbf9f5] border-b border-[#efeeea] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#ffeed9] text-[#895100] flex items-center justify-center font-bold shadow-2xs">
-              <span className="material-symbols-outlined text-[20px]">lock</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-quicksand font-bold text-lg text-[#895100]">
-                  Zooby Secure Payment Gateway
-                </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  256-bit Encrypted
-                </span>
-              </div>
-              <p className="text-[11px] text-[#877462]">
-                PCI-DSS Level 1 &amp; RBI Compliant Checkout
-              </p>
-            </div>
-          </div>
+          <ZoobyLogo
+            size="xs"
+            subtitle="PCI-DSS Level 1 & RBI Compliant Checkout"
+            badgeText="Secure"
+            badgeColor="emerald"
+          />
 
           <button
             onClick={handleCancel}
