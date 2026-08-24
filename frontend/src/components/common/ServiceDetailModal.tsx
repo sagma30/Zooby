@@ -88,6 +88,155 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             </p>
           </div>
 
+          {/* Official Transparent Pricing Tier Breakdown */}
+          <div className="space-y-3 p-4 bg-[#fbf9f5] rounded-2xl border border-[#dac2ae]/80">
+            <div className="flex items-center justify-between">
+              <h3 className="font-quicksand font-bold text-sm text-[#895100] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px]">sell</span>
+                <span>Official Transparent Rate Schedule</span>
+              </h3>
+              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                Guaranteed Upfront
+              </span>
+            </div>
+
+            {/* Walking Tier Table */}
+            {service.id === 'walking' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <div>
+                    <strong className="text-xs text-[#1b1c1a] block">Standard Walk</strong>
+                    <span className="text-[10px] text-[#877462]">30 minutes</span>
+                  </div>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹149</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <div>
+                    <strong className="text-xs text-[#1b1c1a] block">Long Walk</strong>
+                    <span className="text-[10px] text-[#877462]">45 minutes</span>
+                  </div>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹199</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <div>
+                    <strong className="text-xs text-[#1b1c1a] block">Exercise Walk</strong>
+                    <span className="text-[10px] text-[#877462]">60 minutes</span>
+                  </div>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹279</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <div>
+                    <strong className="text-xs text-[#1b1c1a] block">Monthly Plan</strong>
+                    <span className="text-[10px] text-[#877462]">26 days</span>
+                  </div>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹3,500</span>
+                </div>
+              </div>
+            )}
+
+            {/* Sitting Tier Table */}
+            {service.id === 'sitting' && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] text-center">
+                  <strong className="text-xs text-[#1b1c1a] block">3 Hours</strong>
+                  <span className="font-quicksand font-bold text-sm text-[#895100] mt-1 block">₹599</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] text-center">
+                  <strong className="text-xs text-[#1b1c1a] block">8 Hours</strong>
+                  <span className="font-quicksand font-bold text-sm text-[#895100] mt-1 block">₹999</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] text-center">
+                  <strong className="text-xs text-[#1b1c1a] block">24 Hours (Overnight)</strong>
+                  <span className="font-quicksand font-bold text-sm text-[#895100] mt-1 block">₹1,999</span>
+                </div>
+              </div>
+            )}
+
+            {/* Training Tier Table */}
+            {service.id === 'training' && (
+              <div className="space-y-1.5">
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Individual Training Session</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹1,000</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Basic Puppy &amp; Home Training</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹7,000</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Leash, Walking &amp; Behaviour Training</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹14,000</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Aggression, Anxiety or Biting Training</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹20,000</span>
+                </div>
+              </div>
+            )}
+
+            {/* Grooming Van Box Pricing Matrix */}
+            {(service.id === 'mobile_grooming' || service.id === 'grooming') && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#dac2ae] text-[#877462]">
+                      <th className="pb-1.5 font-bold">Package</th>
+                      <th className="pb-1.5 font-bold text-center">Small</th>
+                      <th className="pb-1.5 font-bold text-center">Medium</th>
+                      <th className="pb-1.5 font-bold text-center">Large</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeeea]">
+                    <tr>
+                      <td className="py-2 font-bold text-[#1b1c1a]">Bath + Basic Grooming</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹1,299</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹1,399</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹1,999</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 font-bold text-[#1b1c1a]">Full Grooming with Haircut</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹1,699</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹2,099</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹2,599</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 font-bold text-[#1b1c1a]">Premium De-shedding</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹1,999</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹2,499</td>
+                      <td className="py-2 text-center text-[#895100] font-bold">₹2,999</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Veterinary Services Table */}
+            {(service.id === 'vet_consult' || service.id === 'mobile_vet') && (
+              <div className="space-y-1.5">
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Checking (Nose-to-Tail Physical Exam)</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹899</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Vet Checking &amp; Vaccination</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹1,899 / ₹1,599 (7-in-1)</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">De-worming</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹399</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">First Aid &amp; Acute Wound Dressing</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹999</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-[#efeeea] flex justify-between items-center">
+                  <span className="text-xs text-[#1b1c1a] font-medium">Blood Test at Home</span>
+                  <span className="font-quicksand font-bold text-sm text-[#895100]">₹1,299</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Key Inclusions & Features */}
           <div className="space-y-2.5">
             <h3 className="font-quicksand font-bold text-sm text-[#895100] uppercase tracking-wider">

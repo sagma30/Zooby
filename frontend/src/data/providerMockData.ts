@@ -47,13 +47,13 @@ export const INITIAL_PROVIDER_APPOINTMENTS: ProviderAppointment[] = [
     parentPhone: '+91 98220 11223',
     parentEmail: 'sam@zooby.care',
     avatarUrl: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=240',
-    serviceTitle: 'Annual Vaccination Booster & Physical Exam',
+    serviceTitle: 'Vet Checking & Vaccination (Core 7-in-1)',
     category: 'vet_consult',
     date: 'Today, Aug 20',
     time: '4:30 PM',
     status: 'Confirmed',
-    amount: 1200,
-    notes: 'DHLPP booster due, mild ear scratch check.'
+    amount: 1899,
+    notes: 'DHLPP core vaccination booster due, general physical checking.'
   },
   {
     id: 'apt-102',
@@ -64,13 +64,13 @@ export const INITIAL_PROVIDER_APPOINTMENTS: ProviderAppointment[] = [
     parentPhone: '+91 98220 11223',
     parentEmail: 'sam@zooby.care',
     avatarUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=240',
-    serviceTitle: 'Dental Hygiene Checkup & Scaling Assessment',
+    serviceTitle: 'Checking',
     category: 'vet_consult',
     date: 'Tomorrow, Aug 21',
     time: '11:00 AM',
     status: 'Confirmed',
-    amount: 1500,
-    notes: 'Plaque inspection, prescribe dental chew.'
+    amount: 899,
+    notes: 'Comprehensive nose-to-tail examination.'
   },
   {
     id: 'apt-103',
@@ -81,13 +81,13 @@ export const INITIAL_PROVIDER_APPOINTMENTS: ProviderAppointment[] = [
     parentPhone: '+91 98220 55667',
     parentEmail: 'aarav@zooby.care',
     avatarUrl: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=240',
-    serviceTitle: 'Annual Anti-Rabies Booster',
+    serviceTitle: 'De-worming',
     category: 'vet_consult',
     date: 'Aug 22, 2026',
     time: '2:00 PM',
     status: 'Pending',
-    amount: 800,
-    notes: 'Routine booster and health check.'
+    amount: 399,
+    notes: 'Routine de-worming dose.'
   },
   {
     id: 'apt-104',
@@ -98,13 +98,13 @@ export const INITIAL_PROVIDER_APPOINTMENTS: ProviderAppointment[] = [
     parentPhone: '+91 98333 44556',
     parentEmail: 'sneha.k@example.com',
     avatarUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=240',
-    serviceTitle: 'Puppy Wellness Consultation & Microchipping',
+    serviceTitle: 'Blood Test at Home',
     category: 'vet_consult',
     date: 'Yesterday, Aug 19',
     time: '3:15 PM',
     status: 'Completed',
-    amount: 2200,
-    notes: 'Microchip ISO-11784 implanted successfully.'
+    amount: 1299,
+    notes: 'CBC diagnostic blood panel processed.'
   }
 ];
 
@@ -144,38 +144,47 @@ export const INITIAL_PROVIDER_CUSTOMERS: ProviderCustomer[] = [
 export const INITIAL_PROVIDER_SERVICES: ProviderServiceItem[] = [
   {
     id: 'ps-1',
-    title: 'General Health & Diagnostic Consult',
+    title: 'Checking',
     category: 'vet_consult',
     durationMinutes: 30,
-    price: 800,
+    price: 899,
     isActive: true,
-    description: 'Comprehensive physical examination, vitals, nutrition and routine health advice.'
+    description: 'Comprehensive physical examination, vitals, temperature, and preventative wellness consultation.'
   },
   {
     id: 'ps-2',
-    title: 'Vaccination Booster Pack (Core DHLPP + Rabies)',
+    title: 'Vet Checking & Vaccination',
     category: 'vet_consult',
-    durationMinutes: 20,
-    price: 1200,
+    durationMinutes: 30,
+    price: 1899,
     isActive: true,
-    description: 'Administration of core immunization vaccines with official digital certificate.'
+    description: 'Physical exam and administration of core immunization vaccines (7-in-1 combo ₹1,599) with official digital passport.'
   },
   {
     id: 'ps-3',
-    title: 'Dental Scale & Polish Assessment',
+    title: 'De-worming',
     category: 'vet_consult',
-    durationMinutes: 45,
-    price: 1500,
+    durationMinutes: 15,
+    price: 399,
     isActive: true,
-    description: 'Ultrasonic scaling, tartar removal, gum inspection, and polishing.'
+    description: 'Oral de-worming dose calibrated for weight and parasite defense schedule.'
   },
   {
     id: 'ps-4',
-    title: 'Emergency Triage & Wound Dressing',
+    title: 'First Aid',
     category: 'vet_consult',
-    durationMinutes: 60,
-    price: 2500,
+    durationMinutes: 30,
+    price: 999,
     isActive: true,
-    description: 'Immediate diagnostic care, sterile dressing, pain management and antibiotics.'
+    description: 'Emergency wound cleansing, antiseptic dressing, minor injury treatment, and acute stabilization.'
+  },
+  {
+    id: 'ps-5',
+    title: 'Blood Test at Home',
+    category: 'vet_consult',
+    durationMinutes: 20,
+    price: 1299,
+    isActive: true,
+    description: 'Doorstep sterile blood collection and certified diagnostic laboratory testing (CBC / Organ panel).'
   }
 ];

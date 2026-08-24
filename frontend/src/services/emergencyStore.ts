@@ -186,6 +186,8 @@ class EmergencyStore {
     locationCoords?: { lat: number; lng: number; address?: string };
     assignedWorkerName?: string;
     assignedVanPlate?: string;
+    etaMinutes?: number;
+    distanceKm?: number;
   }): EmergencyState {
     this.stopMovementSimulation();
 
@@ -230,7 +232,7 @@ class EmergencyStore {
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const incident: EmergencyState = {
-      incidentId: 'ZB-1042',
+      incidentId: 'ZB-' + Math.floor(1000 + Math.random() * 9000),
       cityId: targetCity.id,
       cityName: targetCity.name,
       userId: parentId,
@@ -269,8 +271,8 @@ class EmergencyStore {
       assignedWorkerPhone: assignedVan.workerPhone || '+91 98223 99001',
       status: 'EN_ROUTE',
       statusHistory: [],
-      distanceKm: 3.2,
-      etaMinutes: 8,
+      distanceKm: params.distanceKm || 3.2,
+      etaMinutes: params.etaMinutes || 8,
       isMoving: true,
       vanCoordinates: { lat: hubLoc.lat, lng: hubLoc.lng, heading: 320 },
       emergencyCoordinates: {

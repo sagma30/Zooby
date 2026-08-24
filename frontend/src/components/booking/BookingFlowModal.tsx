@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pet, ServiceProvider, Booking, PaymentRecord, ServiceCategory } from '../../types';
 import { useCity } from '../../context/CityContext';
 import { SERVICE_PROVIDERS } from '../../data/mockData';
+import { ZOOBY_OFFICIAL_PRICING, formatRupees } from '../../data/pricingConstants';
 
 interface BookingFlowModalProps {
   isOpen: boolean;
@@ -17,53 +18,53 @@ interface BookingFlowModalProps {
 
 const SERVICE_META: Record<string, { title: string; subtitle: string; icon: string; duration: string; defaultPrice: number }> = {
   mobile_grooming: {
-    title: 'Mobile Hydrobath & Grooming Van',
-    subtitle: 'Doorstep Luxury Pet Spa',
+    title: 'Grooming Van',
+    subtitle: 'Doorstep Luxury Hydrobath Pet Spa',
     icon: 'local_shipping',
-    duration: '60 - 90 mins',
-    defaultPrice: 1199
+    duration: '45 - 75 mins',
+    defaultPrice: 1999
   },
   mobile_vet: {
     title: 'Mobile Vet Clinic Van',
     subtitle: 'Doorstep Vet Health Check & Vaccines',
     icon: 'ambulance',
-    duration: '45 mins',
-    defaultPrice: 850
+    duration: '30 mins',
+    defaultPrice: 899
   },
   vet_consult: {
-    title: 'Veterinary Clinic Consultation',
-    subtitle: 'Full Medical Exam & Diagnostics',
+    title: 'Veterinary Services',
+    subtitle: 'Clinical Diagnostics, Vaccines & Preventative Care',
     icon: 'stethoscope',
     duration: '30 mins',
-    defaultPrice: 650
+    defaultPrice: 899
   },
   grooming: {
     title: 'Salon Spa & Breed Styling',
     subtitle: 'In-Salon Pampering & De-matting',
     icon: 'content_cut',
-    duration: '75 mins',
-    defaultPrice: 999
+    duration: '60 - 75 mins',
+    defaultPrice: 1299
   },
   walking: {
-    title: 'Dog Walking & Fitness',
+    title: 'Pet Walking',
     subtitle: 'GPS-Tracked Energetic Strolls',
     icon: 'directions_walk',
-    duration: '45 mins',
-    defaultPrice: 350
+    duration: '30 mins',
+    defaultPrice: 149
   },
   sitting: {
-    title: 'Pet Sitting & Cage-Free Boarding',
-    subtitle: 'Loving Home Host Stays',
+    title: 'Pet Sitting',
+    subtitle: 'Cage-Free Loving Home Stays & Daycare',
     icon: 'home',
-    duration: 'Per Day Stay',
-    defaultPrice: 1200
+    duration: '3 Hours',
+    defaultPrice: 599
   },
   training: {
-    title: 'Positive Canine Training',
-    subtitle: 'Behavior & Leash Manners Coaching',
+    title: 'Pet Training',
+    subtitle: 'Positive Reinforcement & Behavior Coaching',
     icon: 'school',
     duration: '60 mins',
-    defaultPrice: 1500
+    defaultPrice: 1000
   },
   rescue_support: {
     title: 'Rescue & Shelter Support',
@@ -109,6 +110,10 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
 
   const [chosenPet, setChosenPet] = useState<Pet>(fallbackPet);
   const [serviceCategory, setServiceCategory] = useState<ServiceCategory>(normalizedCategory);
+  const [selectedTierTitle, setSelectedTierTitle] = useState<string>('');
+  const [selectedTierPrice, setSelectedTierPrice] = useState<number>(149);
+  const [selectedTierDuration, setSelectedTierDuration] = useState<string>('30 mins');
+  const [selectedPetSize, setSelectedPetSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [addressInput, setAddressInput] = useState<string>(
     `${currentCity.coverageAreas[0] || 'Main Area'}, ${currentCity.name}`
   );
@@ -125,10 +130,38 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
     if (isOpen) {
       setStep(1);
       setChosenPet(selectedPet || pets[0] || fallbackPet);
-      setServiceCategory(normalizedCategory);
+      const cat = normalizedCategory;
+      setServiceCategory(cat);
       setAddressInput(`${currentCity.coverageAreas[0] || 'Main Area'}, ${currentCity.name}`);
       setConfirmedBooking(null);
       setNotifiedEmail(false);
+
+      // Default Tier setup based on category
+      if (cat === 'walking') {
+        setSelectedTierTitle('Standard Walk');
+        setSelectedTierPrice(149);
+        setSelectedTierDuration('30 mins');
+      } else if (cat === 'sitting') {
+        setSelectedTierTitle('Pet Sitting (3 Hours)');
+        setSelectedTierPrice(599);
+        setSelectedTierDuration('3 Hours');
+      } else if (cat === 'training') {
+        setSelectedTierTitle('Individual Training Session');
+        setSelectedTierPrice(1000);
+        setSelectedTierDuration('60 mins');
+      } else if (cat === 'mobile_grooming' || cat === 'grooming') {
+        setSelectedTierTitle('Bath + Basic Grooming');
+        setSelectedTierPrice(1399); // medium default
+        setSelectedTierDuration('60 mins');
+      } else if (cat === 'vet_consult' || cat === 'mobile_vet') {
+        setSelectedTierTitle('Checking');
+        setSelectedTierPrice(899);
+        setSelectedTierDuration('30 mins');
+      } else {
+        setSelectedTierTitle(SERVICE_META[cat]?.title || 'Pet Care Service');
+        setSelectedTierPrice(SERVICE_META[cat]?.defaultPrice || 149);
+        setSelectedTierDuration(SERVICE_META[cat]?.duration || '30 mins');
+      }
 
       // Find matching city provider if available
       const matching = SERVICE_PROVIDERS.filter(
@@ -153,14 +186,15 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
     title: 'Zooby Pet Care Service',
     subtitle: 'Professional Pet Care',
     icon: 'pets',
-    duration: '60 mins',
-    defaultPrice: 999
+    duration: '30 mins',
+    defaultPrice: 149
   };
 
   const handleConfirm = () => {
     const bookingRef = 'ZB-' + Math.floor(100000 + Math.random() * 900000);
     const bookingId = 'bk-' + Date.now();
-    const finalPrice = selectedProvider?.priceNumber || meta.defaultPrice;
+    const finalPrice = selectedTierPrice || selectedProvider?.priceNumber || meta.defaultPrice;
+    const finalServiceTitle = selectedTierTitle || selectedProvider?.title || meta.title;
     const isMobile = serviceCategory === 'mobile_grooming' || serviceCategory === 'mobile_vet';
 
     const newBooking: Booking = {
@@ -172,7 +206,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
       petBreed: chosenPet.breed,
       petPhoto: chosenPet.photoUrl || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=300',
       serviceCategory,
-      serviceTitle: selectedProvider?.title || meta.title,
+      serviceTitle: finalServiceTitle,
       providerId: selectedProvider?.id || `prov-${currentCity.id}-01`,
       providerName: selectedProvider?.name || `Zooby ${currentCity.name} Care Team`,
       vanWorkerId: isMobile ? `usr-worker-${currentCity.id}` : undefined,
@@ -324,37 +358,252 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
           )}
 
           {/* ========================================================================= */}
-          {/* STEP 2: SERVICE DETAILS                                                   */}
+          {/* STEP 2: SERVICE DETAILS & OFFICIAL TIER SELECTION                         */}
           {/* ========================================================================= */}
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in">
               <div>
-                <h4 className="font-quicksand font-bold text-lg text-[#1b1c1a]">Service Details</h4>
-                <p className="text-xs text-[#716153]">Confirm the service you would like to book.</p>
+                <h4 className="font-quicksand font-bold text-lg text-[#1b1c1a]">Service &amp; Package</h4>
+                <p className="text-xs text-[#716153]">Select your package with guaranteed transparent Zooby pricing.</p>
               </div>
 
-              <div className="p-4 bg-[#ffeed9]/40 border border-[#dac2ae] rounded-2xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-xl text-[#895100]">{meta.icon}</span>
-                    <strong className="text-base text-[#1b1c1a] font-bold">{meta.title}</strong>
+              {/* Walking Packages */}
+              {serviceCategory === 'walking' && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider">
+                    Select Walking Plan:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {ZOOBY_OFFICIAL_PRICING.walking.tiers.map((tier) => {
+                      const isSelected = selectedTierTitle === tier.name;
+                      return (
+                        <button
+                          key={tier.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTierTitle(tier.name);
+                            setSelectedTierPrice(tier.price);
+                            setSelectedTierDuration(tier.duration);
+                          }}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[#895100] bg-[#ffeed9]/70 ring-2 ring-[#895100]/30 shadow-xs'
+                              : 'border-[#dac2ae]/70 bg-[#fbf9f5] hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start w-full">
+                            <div>
+                              <strong className="font-bold text-xs text-[#1b1c1a] block">{tier.name}</strong>
+                              <span className="text-[10px] text-[#716153]">{tier.duration}</span>
+                            </div>
+                            <span className="font-quicksand font-bold text-sm text-[#895100]">{tier.formatted}</span>
+                          </div>
+                          {tier.badge && (
+                            <span className="mt-2 self-start px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#895100] text-white">
+                              {tier.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#895100] text-white">
-                    From ₹{meta.defaultPrice}
-                  </span>
                 </div>
-                <p className="text-xs text-[#544434]">{meta.subtitle}</p>
-                <div className="flex items-center gap-3 pt-2 text-[11px] text-[#716153]">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">schedule</span>
-                    <span>Duration: {meta.duration}</span>
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1 text-emerald-800 font-semibold">
-                    <span className="material-symbols-outlined text-sm">verified</span>
-                    <span>100% Sanitized Equipment</span>
-                  </span>
+              )}
+
+              {/* Sitting Packages */}
+              {serviceCategory === 'sitting' && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider">
+                    Select Sitting Duration:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {ZOOBY_OFFICIAL_PRICING.sitting.tiers.map((tier) => {
+                      const isSelected = selectedTierTitle === tier.name;
+                      return (
+                        <button
+                          key={tier.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTierTitle(tier.name);
+                            setSelectedTierPrice(tier.price);
+                            setSelectedTierDuration(tier.duration);
+                          }}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[#895100] bg-[#ffeed9]/70 ring-2 ring-[#895100]/30 shadow-xs'
+                              : 'border-[#dac2ae]/70 bg-[#fbf9f5] hover:bg-white'
+                          }`}
+                        >
+                          <div>
+                            <strong className="font-bold text-xs text-[#1b1c1a] block">{tier.duration}</strong>
+                            <span className="text-[10px] text-[#716153] line-clamp-1">{tier.description}</span>
+                          </div>
+                          <span className="font-quicksand font-bold text-base text-[#895100] mt-2">{tier.formatted}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+              )}
+
+              {/* Training Packages */}
+              {serviceCategory === 'training' && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider">
+                    Select Training Curriculum:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {ZOOBY_OFFICIAL_PRICING.training.tiers.map((tier) => {
+                      const isSelected = selectedTierTitle === tier.name;
+                      return (
+                        <button
+                          key={tier.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTierTitle(tier.name);
+                            setSelectedTierPrice(tier.price);
+                            setSelectedTierDuration(tier.duration);
+                          }}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[#895100] bg-[#ffeed9]/70 ring-2 ring-[#895100]/30 shadow-xs'
+                              : 'border-[#dac2ae]/70 bg-[#fbf9f5] hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start w-full">
+                            <strong className="font-bold text-xs text-[#1b1c1a]">{tier.name}</strong>
+                            <span className="font-quicksand font-bold text-sm text-[#895100]">{tier.formatted}</span>
+                          </div>
+                          <p className="text-[10px] text-[#716153] mt-1 line-clamp-2">{tier.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Grooming Van / Salon Box Pricing */}
+              {(serviceCategory === 'mobile_grooming' || serviceCategory === 'grooming') && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                      Select Pet Weight Category:
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { key: 'small', label: 'Small', note: 'Up to 10 kg' },
+                        { key: 'medium', label: 'Medium', note: '10 – 25 kg' },
+                        { key: 'large', label: 'Large', note: 'Over 25 kg' }
+                      ].map((sz) => (
+                        <button
+                          key={sz.key}
+                          type="button"
+                          onClick={() => {
+                            const newSize = sz.key as 'small' | 'medium' | 'large';
+                            setSelectedPetSize(newSize);
+                            // recalculate current tier price
+                            const currentBox = ZOOBY_OFFICIAL_PRICING.groomingVan.boxPricing.find(
+                              (b) => b.name === selectedTierTitle
+                            ) || ZOOBY_OFFICIAL_PRICING.groomingVan.boxPricing[0];
+                            setSelectedTierPrice(currentBox[newSize]);
+                          }}
+                          className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
+                            selectedPetSize === sz.key
+                              ? 'border-[#895100] bg-[#ffeed9] text-[#895100] font-bold shadow-xs'
+                              : 'border-[#dac2ae] bg-white text-[#544434]'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">{sz.label}</div>
+                          <div className="text-[9px] text-[#877462]">{sz.note}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider">
+                    Select Grooming Box Package:
+                  </label>
+                  <div className="space-y-2">
+                    {ZOOBY_OFFICIAL_PRICING.groomingVan.boxPricing.map((box) => {
+                      const isSelected = selectedTierTitle === box.name;
+                      const price = box[selectedPetSize];
+                      return (
+                        <button
+                          key={box.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTierTitle(box.name);
+                            setSelectedTierPrice(price);
+                            setSelectedTierDuration('60 - 75 mins');
+                          }}
+                          className={`w-full p-3 rounded-2xl border text-left transition-all cursor-pointer flex justify-between items-center ${
+                            isSelected
+                              ? 'border-[#895100] bg-[#ffeed9]/70 ring-2 ring-[#895100]/30 shadow-xs'
+                              : 'border-[#dac2ae]/70 bg-[#fbf9f5] hover:bg-white'
+                          }`}
+                        >
+                          <div>
+                            <strong className="font-bold text-xs text-[#1b1c1a] block">{box.name}</strong>
+                            <span className="text-[10px] text-[#716153] line-clamp-1">{box.description}</span>
+                          </div>
+                          <span className="font-quicksand font-bold text-base text-[#895100] shrink-0 ml-3">
+                            {formatRupees(price)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Veterinary Services Selection */}
+              {(serviceCategory === 'vet_consult' || serviceCategory === 'mobile_vet') && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider">
+                    Select Veterinary Care Procedure:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {ZOOBY_OFFICIAL_PRICING.veterinary.services.map((svc) => {
+                      const isSelected = selectedTierTitle === svc.name;
+                      return (
+                        <button
+                          key={svc.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTierTitle(svc.name);
+                            setSelectedTierPrice(svc.price);
+                            setSelectedTierDuration(svc.duration);
+                          }}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[#895100] bg-[#ffeed9]/70 ring-2 ring-[#895100]/30 shadow-xs'
+                              : 'border-[#dac2ae]/70 bg-[#fbf9f5] hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start w-full">
+                            <strong className="font-bold text-xs text-[#1b1c1a]">{svc.name}</strong>
+                            <span className="font-quicksand font-bold text-sm text-[#895100]">{svc.formatted}</span>
+                          </div>
+                          <p className="text-[10px] text-[#716153] mt-1 line-clamp-2">{svc.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Tier Banner */}
+              <div className="p-3 bg-[#ffeed9]/40 border border-[#dac2ae] rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-lg text-[#895100]">{meta.icon}</span>
+                  <div>
+                    <span className="text-xs font-bold text-[#1b1c1a] block">{selectedTierTitle || meta.title}</span>
+                    <span className="text-[10px] text-[#877462]">Duration: {selectedTierDuration}</span>
+                  </div>
+                </div>
+                <span className="font-quicksand font-extrabold text-base text-[#895100]">
+                  {formatRupees(selectedTierPrice)}
+                </span>
               </div>
 
               <div className="flex items-center justify-between pt-3">
@@ -651,8 +900,8 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
                 </div>
 
                 <div className="flex justify-between items-center border-b border-[#efeeea] pb-2">
-                  <span className="text-[#877462]">Service:</span>
-                  <strong className="text-[#1b1c1a]">{meta.title}</strong>
+                  <span className="text-[#877462]">Service &amp; Plan:</span>
+                  <strong className="text-[#1b1c1a]">{selectedTierTitle || meta.title} ({selectedTierDuration})</strong>
                 </div>
 
                 <div className="flex justify-between items-center border-b border-[#efeeea] pb-2">
@@ -672,7 +921,9 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
 
                 <div className="flex justify-between items-center pt-1 text-sm font-bold">
                   <span className="text-[#1b1c1a]">Total Estimated Amount:</span>
-                  <span className="text-base text-[#895100]">₹{selectedProvider?.priceNumber || meta.defaultPrice}</span>
+                  <span className="text-base text-[#895100]">
+                    {formatRupees(selectedTierPrice || selectedProvider?.priceNumber || meta.defaultPrice)}
+                  </span>
                 </div>
               </div>
 

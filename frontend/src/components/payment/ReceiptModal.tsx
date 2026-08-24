@@ -174,8 +174,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     </p>
                   </td>
                   <td className="py-3 text-center text-[#544434]">1</td>
-                  <td className="py-3 text-right text-[#544434]">₹{payment.baseFare}</td>
-                  <td className="py-3 text-right font-bold text-[#1b1c1a]">₹{payment.baseFare}</td>
+                  <td className="py-3 text-right text-[#544434]">₹{payment.baseFare.toLocaleString('en-IN')}</td>
+                  <td className="py-3 text-right font-bold text-[#1b1c1a]">₹{payment.baseFare.toLocaleString('en-IN')}</td>
                 </tr>
 
                 {payment.doorstepFee && payment.doorstepFee > 0 ? (
@@ -184,8 +184,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                       <p className="font-medium text-[#1b1c1a]">Van Travel &amp; Doorstep Sanitization</p>
                     </td>
                     <td className="py-2.5 text-center text-[#544434]">1</td>
-                    <td className="py-2.5 text-right text-[#544434]">₹{payment.doorstepFee}</td>
-                    <td className="py-2.5 text-right font-bold text-[#1b1c1a]">₹{payment.doorstepFee}</td>
+                    <td className="py-2.5 text-right text-[#544434]">₹{payment.doorstepFee.toLocaleString('en-IN')}</td>
+                    <td className="py-2.5 text-right font-bold text-[#1b1c1a]">₹{payment.doorstepFee.toLocaleString('en-IN')}</td>
                   </tr>
                 ) : null}
 
@@ -197,8 +197,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                       </p>
                     </td>
                     <td className="py-2.5 text-center">1</td>
-                    <td className="py-2.5 text-right">-₹{payment.discount}</td>
-                    <td className="py-2.5 text-right font-bold">-₹{payment.discount}</td>
+                    <td className="py-2.5 text-right">-₹{payment.discount.toLocaleString('en-IN')}</td>
+                    <td className="py-2.5 text-right font-bold">-₹{payment.discount.toLocaleString('en-IN')}</td>
                   </tr>
                 )}
 
@@ -208,8 +208,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                       <p className="font-medium text-[#544434]">Applicable Taxes (GST 18% inclusive)</p>
                     </td>
                     <td className="py-2.5 text-center text-[#544434]">-</td>
-                    <td className="py-2.5 text-right text-[#544434]">₹{payment.taxes}</td>
-                    <td className="py-2.5 text-right font-medium text-[#544434]">₹{payment.taxes}</td>
+                    <td className="py-2.5 text-right text-[#544434]">₹{payment.taxes.toLocaleString('en-IN')}</td>
+                    <td className="py-2.5 text-right font-medium text-[#544434]">₹{payment.taxes.toLocaleString('en-IN')}</td>
                   </tr>
                 )}
               </tbody>
@@ -220,21 +220,21 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           <div className="p-4 rounded-2xl bg-[#fbf9f5] border border-[#ebdcc4] space-y-2 text-xs">
             <div className="flex justify-between text-[#544434]">
               <span>Subtotal</span>
-              <span>₹{payment.baseFare + (payment.doorstepFee || 0)}</span>
+              <span>₹{(payment.baseFare + (payment.doorstepFee || 0)).toLocaleString('en-IN')}</span>
             </div>
             {payment.discount > 0 && (
               <div className="flex justify-between text-emerald-700 font-semibold">
                 <span>Discount Applied</span>
-                <span>-₹{payment.discount}</span>
+                <span>-₹{payment.discount.toLocaleString('en-IN')}</span>
               </div>
             )}
             <div className="flex justify-between text-[#544434]">
               <span>Taxes &amp; Platform Handling</span>
-              <span>₹{payment.taxes}</span>
+              <span>₹{payment.taxes.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-[#ebdcc4] text-base font-bold text-[#895100]">
               <span>Total Paid Amount</span>
-              <span>₹{payment.amount}</span>
+              <span>₹{payment.amount.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
@@ -243,7 +243,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             <div className="p-4 rounded-2xl bg-[#fff0f0] border border-[#ffdad6] text-xs text-[#ba1a1a] space-y-1">
               <div className="flex items-center gap-1.5 font-bold">
                 <span className="material-symbols-outlined text-[18px]">published_with_changes</span>
-                <span>Refund Processed Successfully (₹{payment.refundAmount || payment.amount})</span>
+                <span>Refund Processed Successfully (₹{(payment.refundAmount || payment.amount).toLocaleString('en-IN')})</span>
               </div>
               <p className="text-[11px] text-[#93000a]">
                 Reason: {payment.refundReason || 'Booking cancelled within grace period'}. Amount credited back to original payment method ({payment.paymentMethodDetails?.brandOrApp || payment.paymentMethod}).

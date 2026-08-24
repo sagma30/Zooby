@@ -213,10 +213,10 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="header-sos-btn"
               onClick={onOpenSOS}
-              className="py-1.5 px-3 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all cursor-pointer ring-2 ring-rose-300 animate-pulse"
+              className="py-1.5 px-3 rounded-full bg-[#ba1a1a] hover:bg-[#991b1b] active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-white/20"
               title="24/7 Rapid Van SOS Emergency Dispatch"
             >
-              <span className="material-symbols-outlined text-[16px] filled-icon">emergency</span>
+              <span className="material-symbols-outlined text-[16px]">emergency</span>
               <span className="font-extrabold tracking-wide">SOS</span>
             </button>
           )}

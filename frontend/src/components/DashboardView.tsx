@@ -241,10 +241,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="lg:col-span-4 space-y-6">
           {/* 🔴 24/7 Rapid Van SOS Quick Action Card */}
           {onOpenSOS && (
-            <div className="bg-gradient-to-r from-rose-600 to-red-600 rounded-2xl p-4 text-white shadow-md flex items-center justify-between gap-3">
+            <div className="bg-gradient-to-r from-[#991b1b] to-[#ba1a1a] rounded-2xl p-4 text-white shadow-md flex items-center justify-between gap-3 border border-white/20">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold animate-pulse">
-                  <span className="material-symbols-outlined text-2xl filled-icon">emergency</span>
+                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-2xl">emergency</span>
                 </div>
                 <div>
                   <h3 className="font-quicksand font-bold text-base leading-tight">24/7 Rapid Van SOS</h3>

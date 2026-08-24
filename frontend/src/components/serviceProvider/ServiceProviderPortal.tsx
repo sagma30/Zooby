@@ -75,8 +75,8 @@ export const ServiceProviderPortal: React.FC<ServiceProviderPortalProps> = ({
     name: '',
     category: 'walking' as 'walking' | 'sitting' | 'grooming' | 'training' | 'mobile_grooming',
     description: '',
-    durationMinutes: 45,
-    price: 600,
+    durationMinutes: 30,
+    price: 149,
     includes: 'Live GPS tracking, Fresh hydration, Post-walk photo'
   });
 
@@ -209,8 +209,8 @@ export const ServiceProviderPortal: React.FC<ServiceProviderPortalProps> = ({
       name: '',
       category: 'walking',
       description: '',
-      durationMinutes: 45,
-      price: 600,
+      durationMinutes: 30,
+      price: 149,
       includes: 'Live GPS tracking, Fresh hydration, Post-walk photo'
     });
     showToast(`New service "${created.name}" created successfully!`);

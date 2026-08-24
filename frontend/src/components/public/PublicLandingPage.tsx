@@ -9,6 +9,9 @@ import { ZoobyLogo } from '../common/ZoobyLogo';
 import { PawCursorHeroTrail } from '../common/PawCursorHeroTrail';
 import { ServiceDetailModal, ServiceDetailData } from '../common/ServiceDetailModal';
 import { CompanyInfoModal, InfoModalTab } from '../common/CompanyInfoModal';
+import { FloatingSOSButton } from '../emergency/FloatingSOSButton';
+import { RapidVanSOSModal } from '../emergency/RapidVanSOSModal';
+import { FloatingEmergencyBar } from '../emergency/FloatingEmergencyBar';
 
 interface PublicLandingPageProps {
   adoptionAnimals?: AdoptionAnimal[];
@@ -38,6 +41,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [infoModalTab, setInfoModalTab] = useState<InfoModalTab>('about');
+  const [isLocalSOSOpen, setIsLocalSOSOpen] = useState(false);
 
   const openInfoModal = (tab: InfoModalTab) => {
     setInfoModalTab(tab);
@@ -47,18 +51,18 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const services: ServiceDetailData[] = [
     {
       id: 'mobile_grooming',
-      title: 'Mobile Grooming Van',
+      title: 'Grooming Van',
       subtitle: 'Doorstep Luxury Hydrobath',
-      desc: 'Air-conditioned custom van equipped with warm water hydrobath, herbal shampoos, low-noise blowers, and gentle sanitized styling right outside your gate.',
+      desc: 'Air-conditioned custom van equipped with warm water hydrobath (38°C), herbal shampoos, low-noise blowers, and gentle sanitized styling right outside your gate.',
       icon: 'local_shipping',
       badge: 'Zooby Mobile Care',
       tag: 'Doorstep Service',
-      price: 'From ₹1,199',
-      duration: '45–60 mins',
+      price: 'From ₹1,299 (Base ₹1,999)',
+      duration: '45–75 mins',
       image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&q=80&w=600',
       inclusions: [
         'Warm RO water hydrobath (38°C)',
-        'Organic chamomile & oatmeal shampoo',
+        'Organic chamomile & herbal shampoo',
         'Low-noise velocity blow dry',
         'Nail clipping, ear cleansing & pad balm'
       ]
@@ -71,14 +75,14 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       icon: 'medical_services',
       badge: 'BVSc Certified Doctors',
       tag: 'Clinic & Virtual',
-      price: 'From ₹650',
+      price: 'From ₹899',
       duration: '30 mins',
       image: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&q=80&w=600',
       inclusions: [
-        'Full physical nose-to-tail examination',
-        'Vital signs check & weight tracking',
-        'Digital prescription & vaccine passport update',
-        'Dietary & behavioral guidance'
+        'Full physical nose-to-tail examination (₹899)',
+        'Vet Checking & Vaccination (₹1,899 / 7-in-1 ₹1,599)',
+        'De-worming dosage (₹399) & First Aid (₹999)',
+        'Blood Test at Home with lab report (₹1,299)'
       ]
     },
     {
@@ -89,8 +93,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       icon: 'ambulance',
       badge: 'Zero Clinic Stress',
       tag: 'Doorstep Vet',
-      price: 'From ₹850',
-      duration: '30–45 mins',
+      price: 'From ₹899',
+      duration: '30 mins',
       image: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80&w=600',
       inclusions: [
         'Doorstep physical exam inside climate-controlled van',
@@ -101,38 +105,38 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     },
     {
       id: 'walking',
-      title: 'Dog Walking',
+      title: 'Pet Walking',
       subtitle: 'GPS-Tracked Fitness Strolls',
       desc: 'Solo or small-pack energizing walks led by background-verified dog handlers with live GPS tracking, hydration breaks, and post-walk photos.',
       icon: 'directions_walk',
       badge: 'Live GPS Tracking',
       tag: 'Daily Routine',
-      price: 'From ₹350 / walk',
-      duration: '30–45 mins',
+      price: 'From ₹149 / walk',
+      duration: '30–60 mins',
       image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&q=80&w=600',
       inclusions: [
-        'Solo or dual walking with vetted handler',
-        'Live route GPS tracking on map',
-        'Clean waste disposal & hydration pause',
-        'Post-walk photo report & distance summary'
+        'Standard Walk: ₹149 (30 mins)',
+        'Long Walk: ₹199 (45 mins)',
+        'Exercise Walk: ₹279 (60 mins)',
+        'Monthly Standard Walk Plan: ₹3,500 (26 days)'
       ]
     },
     {
       id: 'sitting',
-      title: 'Pet Sitting & Boarding',
+      title: 'Pet Sitting',
       subtitle: 'Cage-Free Loving Homes',
       desc: 'Warm in-home pet stays and host boarding with enclosed lawns, personalized diets, plenty of cuddles, and regular video check-ins.',
       icon: 'home',
       badge: 'Verified Pet Hosts',
       tag: 'Cage-Free Stays',
-      price: 'From ₹1,200 / day',
-      duration: 'Overnight / Daycare',
+      price: 'From ₹599',
+      duration: '3h / 8h / 24h',
       image: 'https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&q=80&w=600',
       inclusions: [
-        '100% cage-free home environment',
-        'Daily photo & video updates to pet parent',
-        'Custom feeding & medication schedule adherence',
-        'Enclosed safe play sessions'
+        '3 Hours Sitting: ₹599',
+        '8 Hours Daycare: ₹999',
+        '24 Hours Overnight Stay: ₹1,999',
+        '100% cage-free supervision with video updates'
       ]
     },
     {
@@ -143,14 +147,14 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       icon: 'school',
       badge: 'Force-Free Methods',
       tag: 'Behavior Coaching',
-      price: 'From ₹1,500 / session',
+      price: 'From ₹1,000 / session',
       duration: '60 mins',
       image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&q=80&w=600',
       inclusions: [
-        'One-on-one session with certified trainer',
-        'Positive reward-based force-free methods',
-        'Take-home practice guide for pet parents',
-        'Personalized behavior progress plan'
+        'Individual Training Session: ₹1,000',
+        'Basic Puppy & Home Training: ₹7,000',
+        'Leash, Walking & Behaviour Training: ₹14,000',
+        'Aggression, Anxiety or Biting Training: ₹20,000'
       ]
     },
     {
@@ -161,14 +165,14 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       icon: 'content_cut',
       badge: 'Master Groomers',
       tag: 'Salon Service',
-      price: 'From ₹999',
-      duration: '60–90 mins',
+      price: 'From ₹1,299',
+      duration: '60–75 mins',
       image: 'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&q=80&w=600',
       inclusions: [
-        'Full hygienic bath & deep condition',
-        'Breed-specific scissor & clippers styling',
-        'Sanitary trim, ear cleaning & tear stain care',
-        'Aromatherapy calming mist'
+        'Bath + Basic Grooming: From ₹1,299',
+        'Full Grooming with Haircut: From ₹1,699',
+        'Premium De-shedding: From ₹1,999',
+        'Sanitary trim, ear cleaning & tear stain care'
       ]
     },
     {
@@ -301,11 +305,9 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   };
 
   const handleEmergencySOSClick = () => {
+    setIsLocalSOSOpen(true);
     if (onOpenSOS) {
       onOpenSOS();
-    } else {
-      const sosBtn = document.getElementById('header-sos-btn');
-      if (sosBtn) sosBtn.click();
     }
   };
 
@@ -1120,6 +1122,20 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         onOpenBookingForService={handleBookServiceClick}
         onOpenSOS={handleEmergencySOSClick}
       />
+
+      {/* 13. Public Emergency SOS Floating Button */}
+      <FloatingSOSButton onClick={handleEmergencySOSClick} />
+
+      {/* 14. Dedicated Public Rapid Van SOS Modal */}
+      <RapidVanSOSModal
+        isOpen={isLocalSOSOpen}
+        onClose={() => setIsLocalSOSOpen(false)}
+        currentUser={user}
+        pets={[]}
+      />
+
+      {/* 15. Active Emergency Minimized Banner */}
+      <FloatingEmergencyBar onOpenSOSModal={handleEmergencySOSClick} />
     </div>
   );
 };

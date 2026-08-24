@@ -39,11 +39,11 @@ export const FloatingEmergencyBar: React.FC<FloatingEmergencyBarProps> = ({ onOp
     <aside
       aria-label="Active Emergency Status"
       onClick={onOpenSOSModal}
-      className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-xl bg-gradient-to-r from-rose-700 via-red-600 to-amber-600 text-white rounded-2xl shadow-2xl p-3.5 sm:p-4 border-2 border-white/30 flex items-center justify-between gap-3 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all animate-bounce duration-1000"
+      className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-xl bg-gradient-to-r from-[#991b1b] via-[#b91c1c] to-[#7f1d1d] text-white rounded-2xl shadow-xl p-3.5 sm:p-4 border border-white/25 flex items-center justify-between gap-3 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
     >
       <div className="flex items-center gap-3 overflow-hidden">
-        <div className="w-9 h-9 rounded-xl bg-white text-rose-600 flex items-center justify-center font-bold shrink-0 shadow-xs animate-pulse">
-          <span className="material-symbols-outlined text-2xl filled-icon">emergency</span>
+        <div className="w-9 h-9 rounded-xl bg-white text-[#991b1b] flex items-center justify-center font-bold shrink-0 shadow-xs">
+          <span className="material-symbols-outlined text-2xl font-black">emergency</span>
         </div>
         <div className="overflow-hidden">
           <div className="flex items-center gap-2">

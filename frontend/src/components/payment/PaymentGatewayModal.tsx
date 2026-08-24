@@ -733,31 +733,31 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <div className="space-y-2 pt-2 border-t border-[#efeeea] text-xs">
                   <div className="flex justify-between text-[#544434]">
                     <span>Base Service Fare</span>
-                    <span>₹{basePrice}</span>
+                    <span>₹{basePrice.toLocaleString('en-IN')}</span>
                   </div>
 
                   {doorstepFee > 0 && (
                     <div className="flex justify-between text-[#544434]">
                       <span>Doorstep Van Travel &amp; Sanitization</span>
-                      <span>₹{doorstepFee}</span>
+                      <span>₹{doorstepFee.toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-emerald-700 font-semibold">
                       <span>Discount ({appliedCoupon?.code})</span>
-                      <span>-₹{discountAmount}</span>
+                      <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between text-[#544434]">
                     <span>Taxes &amp; Platform Fee (5%)</span>
-                    <span>₹{taxes}</span>
+                    <span>₹{taxes.toLocaleString('en-IN')}</span>
                   </div>
 
                   <div className="flex justify-between pt-2 border-t border-[#ebdcc4] text-base font-bold text-[#895100]">
                     <span>Total Payable</span>
-                    <span>₹{totalAmount}</span>
+                    <span>₹{totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
