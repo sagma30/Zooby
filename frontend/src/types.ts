@@ -448,6 +448,7 @@ export type EmergencyCategory =
   | 'accident_trauma'
   | 'severe_pain'
   | 'severe_illness'
+  | 'heat_stroke'
   | 'lost_injured_animal'
   | 'other';
 
@@ -463,6 +464,7 @@ export type EmergencyStatus =
   | 'RESOURCE_ASSIGNED'
   | 'DISPATCH_CONFIRMED'
   | 'EN_ROUTE'
+  | 'ARRIVING'
   | 'ARRIVED'
   | 'IN_CARE'
   | 'RESOLVED'

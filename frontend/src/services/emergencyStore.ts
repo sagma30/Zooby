@@ -73,6 +73,17 @@ class EmergencyStore {
       const saved = localStorage.getItem('zooby_active_emergency');
       if (saved) {
         this.activeIncident = JSON.parse(saved);
+        // If simulation was ongoing, resume it
+        if (
+          this.activeIncident &&
+          this.activeIncident.status !== 'RESOLVED' &&
+          this.activeIncident.status !== 'CANCELLED' &&
+          this.activeIncident.status !== 'ARRIVED' &&
+          this.activeIncident.status !== 'IN_CARE'
+        ) {
+          this.setupSimulationSteps(this.activeIncident);
+          this.startMovementSimulation();
+        }
       }
     } catch {
       // ignore
@@ -94,6 +105,66 @@ class EmergencyStore {
 
   getActiveEmergency(): EmergencyState | null {
     return this.activeIncident;
+  }
+
+  private setupSimulationSteps(incident: EmergencyState) {
+    const hubLoc = {
+      lat: incident.vanCoordinates?.lat || 19.9975,
+      lng: incident.vanCoordinates?.lng || 73.7898
+    };
+    const targetLoc = {
+      lat: incident.emergencyCoordinates?.lat || 20.0055,
+      lng: incident.emergencyCoordinates?.lng || 73.7650
+    };
+
+    const vanPlate = incident.assignedVanPlate || 'ZMV-014';
+    const workerName = incident.assignedWorkerName || 'Rahul Sharma';
+    const cityName = incident.cityName || 'Nashik';
+
+    this.simulationSteps = [
+      {
+        distanceKm: 3.2,
+        etaMinutes: 8,
+        lat: hubLoc.lat,
+        lng: hubLoc.lng,
+        msg: `Your Zooby Mobile Care Van (${vanPlate}) has been dispatched and is on the way.`
+      },
+      {
+        distanceKm: 2.6,
+        etaMinutes: 6,
+        lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.25,
+        lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.25,
+        msg: `Your Zooby Van (${workerName}) is navigating via ${cityName} main route.`
+      },
+      {
+        distanceKm: 1.8,
+        etaMinutes: 4,
+        lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.50,
+        lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.50,
+        msg: `Your Zooby Van is approximately 4 minutes away.`
+      },
+      {
+        distanceKm: 1.0,
+        etaMinutes: 2,
+        lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.75,
+        lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.75,
+        msg: `Your Zooby Van is 1.0 km away in ${cityName}. Approaching neighborhood.`
+      },
+      {
+        distanceKm: 0.3,
+        etaMinutes: 1,
+        lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.92,
+        lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.92,
+        msg: `Your Zooby Van is 300m away. Approaching doorstep.`
+      },
+      {
+        distanceKm: 0.0,
+        etaMinutes: 0,
+        lat: targetLoc.lat,
+        lng: targetLoc.lng,
+        msg: `Your Zooby Emergency Van has arrived at your doorstep in ${cityName}.`
+      }
+    ];
   }
 
   /**
@@ -155,17 +226,6 @@ class EmergencyStore {
     const parentId = params.userId || 'usr-parent-sam';
     const petDisplayName = params.petName || 'Bruno';
 
-    // Generate dynamic waypoints from van hub to emergency scene
-    this.simulationSteps = [
-      { distanceKm: 3.2, etaMinutes: 8, lat: hubLoc.lat, lng: hubLoc.lng, msg: `Your Zooby Mobile Care Van (${vanPlate}) is on the way.` },
-      { distanceKm: 2.8, etaMinutes: 7, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.15, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.15, msg: `Your Zooby Van (${workerName}) is navigating via ${targetCity.name} main route.` },
-      { distanceKm: 2.1, etaMinutes: 5, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.35, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.35, msg: `Your Zooby Van is approximately 5 minutes away.` },
-      { distanceKm: 1.4, etaMinutes: 3, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.60, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.60, msg: `Your Zooby Van is approximately 3 minutes away.` },
-      { distanceKm: 0.7, etaMinutes: 2, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.80, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.80, msg: `Your Zooby Van is 700m away in ${targetCity.name}.` },
-      { distanceKm: 0.2, etaMinutes: 1, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.95, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.95, msg: `Your Zooby Van is 200m away. Approaching doorstep.` },
-      { distanceKm: 0.0, etaMinutes: 0, lat: targetLoc.lat, lng: targetLoc.lng, msg: `Your Zooby Van has arrived at ${parentName}'s doorstep in ${targetCity.name}.` }
-    ];
-
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -193,13 +253,13 @@ class EmergencyStore {
         summary: `Immediate mobile response initiated for ${petDisplayName} in ${targetCity.name}.`,
         primaryConcern: params.category.replace('_', ' ').toUpperCase(),
         firstAidAdvice: [
-          'Keep pet calm, warm, and minimize movement.',
-          'Do NOT administer human painkillers.',
-          'Keep airway straight and clear.'
+          'Keep pet calm, warm, and minimize unnecessary movement.',
+          'Do NOT administer human painkillers or medication.',
+          'Ensure airway is straight and unobstructed.'
         ],
         suggestedAction: `Zooby Mobile Care Van ${vanPlate} dispatched from ${targetCity.vanHub.name}.`,
         isLifeThreatening: false,
-        triageModel: 'gemini-2.5-flash',
+        triageModel: 'zooby-safety-rules',
         triagedAt: new Date()
       },
       assignedVanId: assignedVan.vanId || 'van-zmv-014',
@@ -207,7 +267,7 @@ class EmergencyStore {
       assignedWorkerId: 'usr-van-rahul',
       assignedWorkerName: workerName,
       assignedWorkerPhone: assignedVan.workerPhone || '+91 98223 99001',
-      status: 'DISPATCH_CONFIRMED',
+      status: 'EN_ROUTE',
       statusHistory: [],
       distanceKm: 3.2,
       etaMinutes: 8,
@@ -227,11 +287,11 @@ class EmergencyStore {
         avatarUrl: 'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240'
       },
       timeline: [
-        { time: timeStr, description: `Pet Parent ${parentName} triggered 24/7 Rapid SOS for ${petDisplayName} in ${targetCity.name}`, badge: 'SOS Triggered' },
-        { time: timeStr, description: `Location verified: ${targetLoc.address}`, badge: 'GPS Confirmed' },
-        { time: timeStr, description: `Nearest Mobile Care Van (${vanPlate}) dispatched`, badge: 'Van Found' },
-        { time: timeStr, description: `Veterinary support notified (Dr. Ananya Mehta)`, badge: 'Vet Notified' },
-        { time: timeStr, description: `Van Responder (${workerName}) accepted emergency route`, badge: 'En Route' }
+        { time: timeStr, description: `Pet Parent ${parentName} triggered 24/7 Rapid SOS for ${petDisplayName}`, badge: 'SOS Triggered' },
+        { time: timeStr, description: `Location verified: ${targetLoc.address}`, badge: 'GPS Verified' },
+        { time: timeStr, description: `Nearest Mobile Care Van (${vanPlate}) dispatched`, badge: 'Van Dispatched' },
+        { time: timeStr, description: `On-call veterinary support connected (Dr. Ananya Mehta)`, badge: 'Vet Notified' },
+        { time: timeStr, description: `Lead Technician (${workerName}) en route to scene`, badge: 'En Route' }
       ],
       createdAt: new Date(),
       updatedAt: new Date()
@@ -239,6 +299,7 @@ class EmergencyStore {
 
     this.activeIncident = incident;
     this.stepIndex = 0;
+    this.setupSimulationSteps(incident);
     this.saveToStorage();
     this.emit('emergency_updated', this.activeIncident);
 
@@ -277,7 +338,7 @@ class EmergencyStore {
             lng: nextStep.lng,
             heading: 320
           },
-          status: isArrived ? 'ARRIVED' : 'EN_ROUTE',
+          status: isArrived ? 'ARRIVED' : nextStep.distanceKm <= 1.0 ? 'ARRIVING' : 'EN_ROUTE',
           timeline: [
             ...this.activeIncident.timeline,
             {
@@ -288,6 +349,7 @@ class EmergencyStore {
               badge: isArrived ? 'Van Arrived' : undefined
             }
           ],
+          arrivedAt: isArrived ? new Date() : undefined,
           updatedAt: new Date()
         };
 
@@ -298,7 +360,7 @@ class EmergencyStore {
           this.stopMovementSimulation();
         }
       }
-    }, 4500); // Progresses every 4.5 seconds
+    }, 4500); // Progresses smoothly every 4.5 seconds
   }
 
   stopMovementSimulation() {
@@ -320,7 +382,7 @@ class EmergencyStore {
       status: 'EN_ROUTE',
       timeline: [
         ...this.activeIncident.timeline,
-        { time: timeStr, description: 'Van Worker Rahul started emergency route', badge: 'Route Started' }
+        { time: timeStr, description: 'Van Responder accepted emergency route', badge: 'Route Confirmed' }
       ],
       updatedAt: new Date()
     };
@@ -426,7 +488,7 @@ class EmergencyStore {
       const existingHistory = JSON.parse(localStorage.getItem('zooby_emergency_history') || '[]');
       localStorage.setItem('zooby_emergency_history', JSON.stringify([resolved, ...existingHistory]));
 
-      // Also append to Bruno's pet health events if present
+      // Also append to pet health events if present
       const pets = JSON.parse(localStorage.getItem('zooby_pets') || '[]');
       const updatedPets = pets.map((p: Pet) => {
         if (p.name === resolved.petName || p.id === resolved.petId) {

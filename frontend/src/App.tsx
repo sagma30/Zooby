@@ -50,6 +50,7 @@ import { InboxModal } from './components/InboxModal';
 import { AddPetModal } from './components/AddPetModal';
 import { MobileNavBar } from './components/MobileNavBar';
 import { RapidVanSOSModal } from './components/emergency/RapidVanSOSModal';
+import { FloatingEmergencyBar } from './components/emergency/FloatingEmergencyBar';
 import { VanLocation } from './types';
 import { subscribeToVanLocationStream } from './services/gpsTracking';
 
@@ -1077,6 +1078,9 @@ function ZoobyAppInner() {
           setUpdates((prev) => [sosUpdate, ...prev]);
         }}
       />
+
+      {/* Floating Active Emergency Banner (when modal minimized) */}
+      <FloatingEmergencyBar onOpenSOSModal={() => setIsSOSModalOpen(true)} />
 
       {/* Demo Persona Switcher floating pill */}
       <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />

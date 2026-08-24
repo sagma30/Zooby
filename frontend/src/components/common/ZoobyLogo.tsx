@@ -112,13 +112,13 @@ export const ZoobyLogo: React.FC<ZoobyLogoProps> = ({
     >
       {/* Official Custom Zooby Logo Container */}
       <div
-        className={`relative overflow-hidden shrink-0 shadow-xs border border-[#895100]/20 bg-[#2d1c0c] flex items-center justify-center ${containerRadiusClass} ${imageContainerClassName}`}
+        className={`relative overflow-hidden shrink-0 shadow-xs border border-[#895100]/20 bg-white flex items-center justify-center ${containerRadiusClass} ${imageContainerClassName}`}
         style={{ width: `${dimensionPx}px`, height: `${dimensionPx}px` }}
       >
         <img
           src={zoobyLogoAsset}
           alt="Zooby Official Brand Logo"
-          className={`w-full h-full object-cover select-none transition-transform duration-300 ${imageClassName}`}
+          className={`w-full h-full object-contain p-0.5 select-none transition-transform duration-300 ${imageClassName}`}
           loading="eager"
         />
       </div>

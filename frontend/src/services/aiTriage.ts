@@ -37,11 +37,27 @@ export function startVoiceEmergencyTranscription(
 
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-IN'; // Optimized for English/Indian accent context
+    recognition.lang = 'en-IN'; // Optimized for English / Indian emergency context
 
     onStateChange('listening');
 
+    let silenceTimer: any = null;
+
+    const resetSilenceTimer = () => {
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        try {
+          recognition.stop();
+        } catch {
+          // ignore
+        }
+      }, 4500); // Stop automatically after 4.5 seconds of silence
+    };
+
+    resetSilenceTimer();
+
     recognition.onresult = (event: any) => {
+      resetSilenceTimer();
       let interim = '';
       let final = '';
 
@@ -58,13 +74,14 @@ export function startVoiceEmergencyTranscription(
         onInterimText(interim);
       }
       if (final) {
-        onFinalText(final);
+        onFinalText(final.trim());
       }
     };
 
     recognition.onerror = (event: any) => {
+      if (silenceTimer) clearTimeout(silenceTimer);
       console.warn('Speech recognition error:', event.error);
-      if (event.error === 'not-allowed') {
+      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
         onStateChange('permission_denied');
       } else {
         onStateChange('error');
@@ -72,12 +89,14 @@ export function startVoiceEmergencyTranscription(
     };
 
     recognition.onend = () => {
+      if (silenceTimer) clearTimeout(silenceTimer);
       onStateChange('idle');
     };
 
     recognition.start();
 
     return () => {
+      if (silenceTimer) clearTimeout(silenceTimer);
       try {
         recognition.stop();
       } catch {
@@ -93,7 +112,7 @@ export function startVoiceEmergencyTranscription(
 
 /**
  * Synthesizes AI emergency guidance audio using the browser's speech synthesis engine.
- * IMPORTANT: Only speaks calculated ETA if genuinely computed from real location.
+ * Provides calm, supportive audio assistance without making clinical diagnosis claims.
  */
 export function speakEmergencyGuidance(text: string): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -158,7 +177,7 @@ export async function evaluateAITriage(payload: {
     ],
     suggestedAction: 'Immediate dispatch of nearest Zooby Emergency Mobile Unit.',
     isLifeThreatening: isCritical,
-    triageModel: 'zooby-fallback-rules',
+    triageModel: 'zooby-safety-rules',
     triagedAt: new Date()
   };
 }
