@@ -52,6 +52,8 @@ export const CustomerSignUpView: React.FC<CustomerSignUpViewProps> = ({ onNaviga
         onNavigate('/admin/dashboard');
       } else if (newUser.role === 'PROVIDER') {
         onNavigate('/provider/dashboard');
+      } else if (newUser.role === 'SERVICE_PROVIDER') {
+        onNavigate('/service-provider/dashboard');
       } else if (newUser.role === 'RESCUE_PARTNER') {
         onNavigate('/rescue/dashboard');
       } else if (newUser.role === 'VAN_WORKER') {

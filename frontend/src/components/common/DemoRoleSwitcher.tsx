@@ -118,6 +118,20 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({ currentPath,
 
             <button
               onClick={async () => {
+                await loginDemo('SERVICE_PROVIDER');
+                onNavigate('/service-provider/dashboard');
+              }}
+              className="w-full py-1.5 px-2.5 rounded-xl bg-[#2e251e] hover:bg-[#3d3228] text-[#fbf9f5] border border-[#524132] font-semibold text-left flex items-center justify-between cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-base text-orange-400">handshake</span>
+                <span>Service Provider (Vikram Deshmukh)</span>
+              </span>
+              {role === 'SERVICE_PROVIDER' && <span className="text-[10px] text-orange-400 font-bold">Active</span>}
+            </button>
+
+            <button
+              onClick={async () => {
                 await loginDemo('ADMIN');
                 onNavigate('/admin/dashboard');
               }}

@@ -27,6 +27,9 @@ export const UnifiedSignInView: React.FC<UnifiedSignInViewProps> = ({ onNavigate
       case 'PROVIDER':
         onNavigate('/provider/dashboard');
         break;
+      case 'SERVICE_PROVIDER':
+        onNavigate('/service-provider/dashboard');
+        break;
       case 'RESCUE_PARTNER':
         onNavigate('/rescue/dashboard');
         break;

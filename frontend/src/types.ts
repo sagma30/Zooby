@@ -236,10 +236,11 @@ export interface NotificationUpdate {
   read: boolean;
 }
 
-// 5 Core Roles of Zooby Ecosystem
+// 6 Core Roles of Zooby Ecosystem
 export type UserRole =
   | 'PET_PARENT'
   | 'PROVIDER'
+  | 'SERVICE_PROVIDER'
   | 'RESCUE_PARTNER'
   | 'VAN_WORKER'
   | 'ADMIN';

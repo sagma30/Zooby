@@ -37,6 +37,7 @@ import { CustomerSignUpView } from './components/auth/CustomerSignUpView';
 import { ProviderRegisterView } from './components/auth/ProviderRegisterView';
 import { AdminPortal } from './components/admin/AdminPortal';
 import { ProviderPortal } from './components/provider/ProviderPortal';
+import { ServiceProviderPortal } from './components/serviceProvider/ServiceProviderPortal';
 import { RescuePartnerPortal } from './components/rescue/RescuePartnerPortal';
 import { VanWorkerPortal } from './components/van/VanWorkerPortal';
 import { PetParentAdoptionView } from './components/adoption/PetParentAdoptionView';
@@ -607,6 +608,32 @@ function ZoobyAppInner() {
     );
   }
 
+  // 5B. SERVICE PROVIDER ROUTE GUARD (/service-provider/* or /dashboard/service-provider)
+  if (currentPath.startsWith('/service-provider') || currentPath === '/dashboard/service-provider') {
+    if (!isAuthenticated || role !== 'SERVICE_PROVIDER') {
+      return (
+        <div className="relative">
+          <AccessDeniedView
+            requiredRole="SERVICE_PROVIDER"
+            attemptedPath={currentPath}
+            onNavigate={navigate}
+          />
+          <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
+        </div>
+      );
+    }
+
+    const spTab =
+      currentPath.replace('/service-provider/', '').replace('/service-provider', '').replace('/dashboard/service-provider', '') ||
+      'dashboard';
+    return (
+      <div className="relative">
+        <ServiceProviderPortal currentTab={spTab} onNavigate={navigate} payments={payments} />
+        <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
+      </div>
+    );
+  }
+
   // 6. RESCUE PARTNER ROUTE GUARD (/rescue/*)
   if (currentPath.startsWith('/rescue')) {
     if (!isAuthenticated || role !== 'RESCUE_PARTNER') {
@@ -710,6 +737,15 @@ function ZoobyAppInner() {
       );
     }
 
+    if (role === 'SERVICE_PROVIDER') {
+      return (
+        <div className="relative">
+          <ServiceProviderPortal currentTab="dashboard" onNavigate={navigate} payments={payments} />
+          <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
+        </div>
+      );
+    }
+
     if (role === 'RESCUE_PARTNER') {
       return (
         <div className="relative">
@@ -764,6 +800,15 @@ function ZoobyAppInner() {
     return (
       <div className="relative">
         <ProviderPortal currentTab="dashboard" onNavigate={navigate} />
+        <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
+      </div>
+    );
+  }
+
+  if (role === 'SERVICE_PROVIDER') {
+    return (
+      <div className="relative">
+        <ServiceProviderPortal currentTab="dashboard" onNavigate={navigate} payments={payments} />
         <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
       </div>
     );

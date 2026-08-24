@@ -18,6 +18,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
   const getMyDashboardPath = () => {
     if (role === 'ADMIN') return '/admin/dashboard';
     if (role === 'PROVIDER') return '/provider/dashboard';
+    if (role === 'SERVICE_PROVIDER') return '/service-provider/dashboard';
     if (role === 'RESCUE_PARTNER') return '/rescue/dashboard';
     if (role === 'VAN_WORKER') return '/van/dashboard';
     return '/dashboard';
@@ -25,7 +26,8 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
 
   const getRoleDisplayName = (r?: UserRole | string | null) => {
     if (r === 'ADMIN') return 'Super Administrator';
-    if (r === 'PROVIDER') return 'Veterinary / Care Provider';
+    if (r === 'PROVIDER') return 'Veterinary Specialist';
+    if (r === 'SERVICE_PROVIDER') return 'Pet Service Provider';
     if (r === 'RESCUE_PARTNER') return 'Rescue Partner / Shelter';
     if (r === 'VAN_WORKER') return 'Mobile Van Specialist';
     if (r === 'PET_PARENT') return 'Pet Parent';

@@ -129,6 +129,13 @@ export function getRoleBadgeInfo(role?: UserRole | null): {
         badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
         icon: 'medical_services'
       };
+    case 'SERVICE_PROVIDER':
+      return {
+        label: 'Service Provider / Care Pro',
+        shortLabel: 'Service Pro',
+        badgeClass: 'bg-orange-100 text-orange-900 border-orange-300',
+        icon: 'handshake'
+      };
     case 'RESCUE_PARTNER':
       return {
         label: 'Rescue Partner',

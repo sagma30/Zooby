@@ -136,6 +136,38 @@ export const DEMO_USERS: Record<UserRole, { user: UserProfile; passwordHint: str
       bio: 'Central platform operations, provider verification audit, mobile van fleet dispatch, and customer happiness supervisor.'
     },
     passwordHint: 'priya123'
+  },
+  SERVICE_PROVIDER: {
+    user: {
+      id: 'usr-sp-vikram',
+      userId: 'usr-sp-vikram',
+      firstName: 'Vikram',
+      lastName: 'Deshmukh',
+      displayName: 'Vikram Deshmukh',
+      name: 'Vikram Deshmukh',
+      email: 'vikram.provider@zooby.care',
+      phone: '+91 98224 88771',
+      profilePhoto: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&q=80&w=240',
+      avatarUrl: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&q=80&w=240',
+      city: 'Nashik',
+      location: 'Gangapur Road, Nashik',
+      role: 'SERVICE_PROVIDER',
+      accountStatus: 'Active',
+      createdAt: 'April 2024',
+      joinedDate: 'April 2024',
+      businessName: 'Paws & Trails Pet Care & Grooming Hub',
+      organizationName: 'Paws & Trails Pet Care & Grooming Hub',
+      serviceCategory: 'grooming',
+      specialization: 'Canine Fitness, Pet Sitting & Holistic Grooming',
+      experience: '6+ Years',
+      licenseNumber: 'MH-PETCARE-2021-9941',
+      availability: 'Available',
+      status: 'Available',
+      isVerified: true,
+      rating: 4.92,
+      bio: 'Certified pet care professional, canine fitness walker, and master groomer offering personalized care, cage-free sitting, and behavioral coaching across Nashik.'
+    },
+    passwordHint: 'vikram123'
   }
 };
 
@@ -183,6 +215,9 @@ export function findUserByCredentials(emailOrPhone: string): UserProfile | null 
       candidate.phone?.toLowerCase() === normalized ||
       (normalized.includes('sam') && key === 'PET_PARENT') ||
       (normalized.includes('parent') && key === 'PET_PARENT') ||
+      (normalized.includes('vikram') && key === 'SERVICE_PROVIDER') ||
+      (normalized.includes('service_provider') && key === 'SERVICE_PROVIDER') ||
+      (normalized.includes('paws & trails') && key === 'SERVICE_PROVIDER') ||
       (normalized.includes('ananya') && key === 'PROVIDER') ||
       (normalized.includes('provider') && key === 'PROVIDER') ||
       (normalized.includes('vet') && key === 'PROVIDER') ||
@@ -257,6 +292,9 @@ export function findUserByCredentials(emailOrPhone: string): UserProfile | null 
   } else if (normalized.includes('vet') || normalized.includes('dr.') || normalized.includes('clinic')) {
     assignedRole = 'PROVIDER';
     avatar = 'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240';
+  } else if (normalized.includes('walker') || normalized.includes('sitter') || normalized.includes('groomer') || normalized.includes('trainer') || normalized.includes('service_provider') || normalized.includes('vikram') || normalized.includes('service-provider')) {
+    assignedRole = 'SERVICE_PROVIDER';
+    avatar = 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&q=80&w=240';
   }
 
   const generatedId = `usr-${assignedRole.toLowerCase()}-${Date.now()}`;

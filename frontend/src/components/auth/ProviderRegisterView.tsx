@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { ServiceCategory } from '../../types';
+import { ServiceCategory, UserRole } from '../../types';
 import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface ProviderRegisterViewProps {
@@ -29,15 +29,21 @@ export const ProviderRegisterView: React.FC<ProviderRegisterViewProps> = ({ onNa
     }
 
     try {
+      const assignedRole: UserRole = serviceCategory === 'vet_consult' ? 'PROVIDER' : 'SERVICE_PROVIDER';
       await signup({
         name: providerName.trim(),
         email: email.trim(),
         phone: phone.trim() || '+91 98330 44556',
-        role: 'PROVIDER',
+        role: assignedRole,
         businessName: businessName.trim(),
-        serviceCategory: serviceCategory
+        serviceCategory: serviceCategory,
+        city: city || 'Nashik'
       });
-      onNavigate('/provider/dashboard');
+      if (assignedRole === 'SERVICE_PROVIDER') {
+        onNavigate('/service-provider/dashboard');
+      } else {
+        onNavigate('/provider/dashboard');
+      }
     } catch (err: any) {
       setErrorMessage('Provider registration could not be completed.');
     }

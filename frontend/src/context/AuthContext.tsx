@@ -168,6 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
     let avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240';
     if (assignedRole === 'PROVIDER') {
       avatar = 'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240';
+    } else if (assignedRole === 'SERVICE_PROVIDER') {
+      avatar = 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&q=80&w=240';
     } else if (assignedRole === 'RESCUE_PARTNER') {
       avatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=240';
     } else if (assignedRole === 'VAN_WORKER') {
