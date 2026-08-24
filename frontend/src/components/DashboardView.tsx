@@ -2,6 +2,8 @@ import React from 'react';
 import { Pet, AgendaItem, NotificationUpdate, ServiceCategory, VanLocation, Booking } from '../types';
 import { ZoobyRealMap } from './common/ZoobyRealMap';
 import { calculateDistanceKm, calculateTravelEtaMinutes } from '../services/gpsTracking';
+import { useAuth } from '../context/AuthContext';
+import { getDynamicGreeting, getPersonalizedEmptyState, getUserFirstName } from '../utils/identity';
 
 interface DashboardViewProps {
   pets: Pet[];
@@ -30,15 +32,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   activeBooking,
   onOpenSOS
 }) => {
+  const { user } = useAuth();
+  const greeting = getDynamicGreeting(user);
+
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-6 md:py-10 space-y-10 animate-fade-in">
       {/* Hero Greeting */}
       <div>
         <h1 className="font-quicksand font-bold text-3xl md:text-5xl text-[#1b1c1a] tracking-tight">
-          Good morning, Rohan!
+          {greeting}
         </h1>
         <p className="font-jakarta text-base md:text-lg text-[#544434] mt-2">
-          Here's what's happening with your furry friends today.
+          Here's what's happening with your furry companions today.
         </p>
       </div>
 
@@ -62,8 +67,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* Pets Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {pets.map((pet) => (
+            {pets.length === 0 ? (
+              <div className="bg-white rounded-2xl p-8 border border-[#e5e0d8] text-center space-y-3">
+                <div className="w-12 h-12 bg-amber-50 text-[#895100] rounded-full flex items-center justify-center mx-auto">
+                  <span className="material-symbols-outlined text-2xl">pets</span>
+                </div>
+                <p className="text-xs text-[#877462]">{getPersonalizedEmptyState(user, 'pets')}</p>
+                <button
+                  onClick={onOpenAddPet}
+                  className="py-2 px-4 rounded-full bg-[#895100] text-white text-xs font-bold hover:bg-[#683c00] transition-colors cursor-pointer"
+                >
+                  + Add First Pet
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                {pets.map((pet) => (
                 <div
                   key={pet.id}
                   className="bg-white rounded-2xl p-5 border border-[#e5e0d8] shadow-xs relative overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow group"
@@ -149,6 +168,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </span>
               </button>
             </div>
+            )}
           </div>
 
           {/* Section: Book a Service */}
@@ -287,7 +307,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="p-3 bg-[#fbf9f5] rounded-xl border border-[#efeeea] flex items-center justify-between text-xs">
               <div>
                 <span className="text-[#877462] block text-[10px] uppercase font-bold">Driver / Tech</span>
-                <strong className="text-[#1b1c1a]">{activeVanLocation?.workerName || 'Vikram Pawar'}</strong>
+                <strong className="text-[#1b1c1a]">{activeVanLocation?.workerName || 'Rahul Sharma'}</strong>
               </div>
 
               <div className="text-right">
@@ -327,7 +347,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </h2>
 
             <div className="space-y-4">
-              {agenda.map((item) => (
+              {agenda.length === 0 ? (
+                <div className="p-4 rounded-xl bg-[#fbf9f5] border border-[#efeeea] text-center text-xs text-[#877462]">
+                  <p>{getPersonalizedEmptyState(user, 'appointments')}</p>
+                </div>
+              ) : (
+                agenda.map((item) => (
                 <div
                   key={item.id}
                   className="bg-[#fbf9f5] rounded-xl p-4 border border-[#efeeea] relative pl-4 border-l-4 border-l-[#ff9f1c]"
@@ -382,7 +407,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </button>
                   )}
                 </div>
-              ))}
+              )))}
             </div>
           </div>
 

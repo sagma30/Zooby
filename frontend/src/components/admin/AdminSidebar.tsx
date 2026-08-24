@@ -1,4 +1,7 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { getUserDisplayName } from '../../utils/identity';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface AdminSidebarProps {
   currentTab: string;
@@ -17,6 +20,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onVerifyProvidersClick,
   pendingApprovalsCount = 45
 }) => {
+  const { user } = useAuth();
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'grid_view' },
     { id: 'emergency', label: 'Rapid SOS & Telemetry', icon: 'emergency' },
@@ -37,16 +41,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     <aside className="w-64 bg-[#fbf9f5] border-r border-[#efeeea] flex flex-col justify-between shrink-0 h-screen sticky top-0 overflow-y-auto selection:bg-[#ffdcbc]">
       <div>
         {/* Brand Header */}
-        <div className="p-6 pb-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#895100] text-white flex items-center justify-center shadow-xs">
-            <span className="material-symbols-outlined text-[20px] filled-icon">pets</span>
-          </div>
-          <div>
-            <h1 className="font-quicksand font-bold text-lg text-[#895100] leading-tight">
-              Zooby Admin
-            </h1>
-            <p className="text-[11px] text-[#877462] font-semibold">Pet-First Ecosystem</p>
-          </div>
+        <div className="p-6 pb-4 flex items-center">
+          <ZoobyLogo
+            size="sm"
+            subtitle="Pet-First Ecosystem"
+            badgeText="Admin"
+            badgeColor="amber"
+            clickable={true}
+            onClick={() => onSelectTab('dashboard')}
+          />
         </div>
 
         {/* Navigation Menu */}
@@ -100,15 +103,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <div className="flex items-center gap-3 p-2 rounded-xl bg-white border border-[#efeeea] shadow-2xs">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#ff9f1c] shrink-0">
             <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"
-              alt="Admin"
+              src={user?.profilePhoto || user?.avatarUrl || "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=240"}
+              alt={getUserDisplayName(user, 'Priya Sharma')}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="overflow-hidden">
-            <div className="text-xs font-bold text-[#1b1c1a] truncate">Zooby Admin</div>
+            <div className="text-xs font-bold text-[#1b1c1a] truncate">{getUserDisplayName(user, 'Priya Sharma')}</div>
             <div className="text-[10px] text-[#877462] font-semibold truncate">
-              Super Administrator
+              {user?.jobTitle || 'Administrator'}
             </div>
           </div>
         </div>

@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { getUserDisplayName } from '../../utils/identity';
 
 interface AdminHeaderProps {
   title: string;
@@ -18,6 +20,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   onOpenMobileMenu,
   onExitAdmin
 }) => {
+  const { user } = useAuth();
+  const displayName = getUserDisplayName(user, 'Priya Sharma');
+
   return (
     <header className="sticky top-0 z-30 bg-[#fbf9f5]/95 backdrop-blur-md border-b border-[#efeeea] px-6 py-4 flex items-center justify-between gap-4">
       {/* Left: Mobile Toggle & Page Title */}
@@ -79,12 +84,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         <button
           onClick={onExitAdmin}
           className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[#ff9f1c]/40 transition-all cursor-pointer"
-          title="Super Admin (Click to switch to User App)"
+          title={`${displayName} (Click to switch to User App)`}
         >
           <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#ff9f1c] shadow-xs">
             <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"
-              alt="Admin"
+              src={user?.profilePhoto || user?.avatarUrl || "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=240"}
+              alt={displayName}
               className="w-full h-full object-cover"
             />
           </div>

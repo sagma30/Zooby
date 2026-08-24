@@ -62,6 +62,8 @@ export interface Pet {
   isAttentionNeeded?: boolean;
   healthEvents: HealthEvent[];
   careRecords?: PetCareRecord[];
+  ownerId?: string;
+  ownerName?: string;
 }
 
 export type ServiceCategory =
@@ -191,6 +193,9 @@ export interface Booking {
   serviceTitle: string;
   providerId: string;
   providerName: string;
+  userId?: string;
+  petParentId?: string;
+  petParentName?: string;
   vanWorkerId?: string;
   vanWorkerName?: string;
   date: string;
@@ -241,21 +246,37 @@ export type UserRole =
 
 export interface UserProfile {
   id: string;
+  userId?: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
   name: string;
   email: string;
   phone?: string;
+  profilePhoto?: string;
   avatarUrl: string;
   location: string;
+  city?: string;
   role: UserRole;
+  accountStatus?: 'Active' | 'Suspended' | 'Pending';
+  createdAt?: string;
+  joinedDate?: string;
   businessName?: string;
+  organizationName?: string;
   serviceCategory?: ServiceCategory;
+  specialization?: string;
+  experience?: string;
+  licenseNumber?: string;
+  availability?: 'Available' | 'Busy' | 'Offline';
+  status?: string;
+  jobTitle?: string;
   isVerified?: boolean;
   rating?: number;
-  joinedDate?: string;
   assignedVanId?: string;
   assignedVanPlate?: string;
   bio?: string;
   emergencyContact?: string;
+  savedAddresses?: string[];
 }
 
 // Adoption Entity & Application

@@ -302,35 +302,35 @@ export const UnifiedSignInView: React.FC<UnifiedSignInViewProps> = ({ onNavigate
                 onClick={() => handlePrefillDemo('PET_PARENT')}
                 className="px-2 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#895100] rounded-lg font-bold border border-amber-200/70 transition-colors cursor-pointer text-left"
               >
-                🐾 Pet Parent (Rohan)
+                🐾 Pet Parent (Sam Sharma)
               </button>
               <button
                 type="button"
                 onClick={() => handlePrefillDemo('PROVIDER')}
                 className="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg font-bold border border-blue-200/70 transition-colors cursor-pointer text-left"
               >
-                🩺 Vet Clinic (Dr. Iyer)
+                🩺 Vet Clinic (Dr. Ananya Mehta)
               </button>
               <button
                 type="button"
                 onClick={() => handlePrefillDemo('RESCUE_PARTNER')}
                 className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold border border-emerald-200/70 transition-colors cursor-pointer text-left"
               >
-                🐕 Rescue Org (Ananya)
+                🐕 Rescue Org (Neha Patil)
               </button>
               <button
                 type="button"
                 onClick={() => handlePrefillDemo('VAN_WORKER')}
                 className="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-lg font-bold border border-purple-200/70 transition-colors cursor-pointer text-left"
               >
-                🚐 Van Unit #1 (Vikram)
+                🚐 Van Unit ZMV-014 (Rahul Sharma)
               </button>
               <button
                 type="button"
                 onClick={() => handlePrefillDemo('ADMIN')}
                 className="px-2 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-lg font-bold border border-stone-300 transition-colors cursor-pointer text-left"
               >
-                🛡️ Admin (Superuser)
+                🛡️ Admin (Priya Sharma)
               </button>
             </div>
           </div>

@@ -158,7 +158,7 @@ export const ProviderAuthView: React.FC<ProviderAuthViewProps> = ({ onNavigate }
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-[#895100]">Demo Provider Account</p>
-                <p className="text-[11px] text-[#877462] font-mono">dr.rohan@zooby.care (Dr. Rohan Kulkarni)</p>
+                <p className="text-[11px] text-[#877462] font-mono">dr.ananya@zooby.care (Dr. Ananya Mehta)</p>
               </div>
             </div>
             <button
@@ -220,7 +220,7 @@ export const ProviderAuthView: React.FC<ProviderAuthViewProps> = ({ onNavigate }
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. dr.rohan@zooby.care or clinic email"
+                  placeholder="e.g. dr.ananya@zooby.care or clinic email"
                   className="w-full px-4 py-3 bg-white border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100]"
                 />
               </div>
@@ -230,7 +230,7 @@ export const ProviderAuthView: React.FC<ProviderAuthViewProps> = ({ onNavigate }
                   <label className="text-xs font-bold text-[#544434] uppercase tracking-wider">
                     Password
                   </label>
-                  <span className="text-xs text-[#877462]">Hint: provider123</span>
+                  <span className="text-xs text-[#877462]">Hint: ananya123</span>
                 </div>
                 <div className="relative">
                   <input

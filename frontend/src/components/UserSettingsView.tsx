@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { CameraPhotoCaptureModal } from './common/CameraPhotoCaptureModal';
+import { getRoleBadgeInfo, getUserDisplayName } from '../utils/identity';
 
 interface UserSettingsViewProps {
   onNavigateTab?: (tab: string) => void;
@@ -11,19 +12,26 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
   const { user, updateUserProfile } = useAuth();
 
   // Form states initialized with current user record
-  const [name, setName] = useState(user?.name || 'Zooby Member');
+  const [firstName, setFirstName] = useState(user?.firstName || user?.name?.split(' ')[0] || '');
+  const [lastName, setLastName] = useState(user?.lastName || user?.name?.split(' ').slice(1).join(' ') || '');
+  const [displayName, setDisplayName] = useState(user?.displayName || user?.name || 'Zooby Member');
   const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState(user?.phone || '+91 98201 23456');
-  const [location, setLocation] = useState(user?.location || 'Mumbai, MH');
-  const [bio, setBio] = useState('Loving pet parent passionate about canine nutrition and positive reinforcement.');
-  const [businessName, setBusinessName] = useState(user?.businessName || '');
+  const [phone, setPhone] = useState(user?.phone || '+91 98220 11223');
+  const [city, setCity] = useState(user?.city || 'Nashik');
+  const [location, setLocation] = useState(user?.location || 'Gangapur Road, Nashik');
+  const [bio, setBio] = useState(user?.bio || 'Loving pet parent dedicated to preventative wellness and 24/7 care.');
+  const [businessName, setBusinessName] = useState(user?.businessName || user?.organizationName || '');
+  const [specialization, setSpecialization] = useState(user?.specialization || 'Companion Animal Care & Surgery');
+  const [licenseNumber, setLicenseNumber] = useState(user?.licenseNumber || 'MH-VET-2015-8842');
+  const [experience, setExperience] = useState(user?.experience || '10+ Years');
+  const [assignedVanPlate, setAssignedVanPlate] = useState(user?.assignedVanPlate || 'ZMV-014');
+  const [jobTitle, setJobTitle] = useState(user?.jobTitle || (user?.role === 'ADMIN' ? 'Administrator' : 'Lead Mobile Technician'));
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(
-    user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240'
+    user?.profilePhoto || user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240'
   );
 
   // Emergency & Preferences state
-  const [emergencyContactName, setEmergencyContactName] = useState('Pooja Deshmukh (Spouse)');
-  const [emergencyPhone, setEmergencyPhone] = useState('+91 98201 99887');
+  const [emergencyContact, setEmergencyContact] = useState(user?.emergencyContact || '+91 98220 99887 (Karan Sharma)');
   const [vaccineReminders, setVaccineReminders] = useState(true);
   const [bookingSmsAlerts, setBookingSmsAlerts] = useState(true);
   const [marketingTips, setMarketingTips] = useState(false);
@@ -40,20 +48,29 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
   // Sync state if auth user changes
   useEffect(() => {
     if (user) {
-      setName(user.name);
+      setFirstName(user.firstName || user.name?.split(' ')[0] || '');
+      setLastName(user.lastName || user.name?.split(' ').slice(1).join(' ') || '');
+      setDisplayName(user.displayName || user.name || 'Zooby Member');
       setEmail(user.email);
       if (user.phone) setPhone(user.phone);
+      if (user.city) setCity(user.city);
       if (user.location) setLocation(user.location);
-      if (user.avatarUrl) setCurrentAvatarUrl(user.avatarUrl);
-      if (user.businessName) setBusinessName(user.businessName);
+      if (user.profilePhoto || user.avatarUrl) setCurrentAvatarUrl(user.profilePhoto || user.avatarUrl);
+      if (user.businessName || user.organizationName) setBusinessName(user.businessName || user.organizationName || '');
+      if (user.bio) setBio(user.bio);
+      if (user.specialization) setSpecialization(user.specialization);
+      if (user.licenseNumber) setLicenseNumber(user.licenseNumber);
+      if (user.experience) setExperience(user.experience);
+      if (user.assignedVanPlate) setAssignedVanPlate(user.assignedVanPlate);
+      if (user.jobTitle) setJobTitle(user.jobTitle);
+      if (user.emergencyContact) setEmergencyContact(user.emergencyContact);
     }
   }, [user]);
 
   // Handle saving photo captured from camera
   const handlePhotoCaptured = (newImageDataUrl: string) => {
     setCurrentAvatarUrl(newImageDataUrl);
-    // Persist directly to user profile record
-    updateUserProfile({ avatarUrl: newImageDataUrl });
+    updateUserProfile({ avatarUrl: newImageDataUrl, profilePhoto: newImageDataUrl });
     setSavedSuccessMessage('Profile photo captured with camera and saved to your account!');
     setTimeout(() => setSavedSuccessMessage(''), 4000);
   };
@@ -67,7 +84,7 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
         const result = loadEvent.target?.result as string;
         if (result) {
           setCurrentAvatarUrl(result);
-          updateUserProfile({ avatarUrl: result });
+          updateUserProfile({ avatarUrl: result, profilePhoto: result });
           setSavedSuccessMessage('New profile photo uploaded and saved!');
           setTimeout(() => setSavedSuccessMessage(''), 4000);
         }
@@ -79,7 +96,7 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
   // Handle Preset Avatar Selection
   const handleSelectPresetAvatar = (url: string) => {
     setCurrentAvatarUrl(url);
-    updateUserProfile({ avatarUrl: url });
+    updateUserProfile({ avatarUrl: url, profilePhoto: url });
     setSavedSuccessMessage('Avatar updated!');
     setTimeout(() => setSavedSuccessMessage(''), 3000);
   };
@@ -89,28 +106,45 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
     e.preventDefault();
     setIsSubmitting(true);
 
+    const calculatedDisplayName = displayName.trim() || `${firstName.trim()} ${lastName.trim()}`.trim();
+
     updateUserProfile({
-      name: name.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      displayName: calculatedDisplayName,
+      name: calculatedDisplayName,
       email: email.trim(),
       phone: phone.trim(),
+      city: city.trim(),
       location: location.trim(),
+      profilePhoto: currentAvatarUrl,
       avatarUrl: currentAvatarUrl,
-      ...(user?.role === 'PROVIDER' ? { businessName: businessName.trim() } : {})
+      bio: bio.trim(),
+      emergencyContact: emergencyContact.trim(),
+      businessName: businessName.trim() || undefined,
+      organizationName: businessName.trim() || undefined,
+      specialization: specialization.trim() || undefined,
+      licenseNumber: licenseNumber.trim() || undefined,
+      experience: experience.trim() || undefined,
+      assignedVanPlate: assignedVanPlate.trim() || undefined,
+      jobTitle: jobTitle.trim() || undefined
     });
 
     setTimeout(() => {
       setIsSubmitting(false);
-      setSavedSuccessMessage('Account details and profile settings saved successfully.');
+      setSavedSuccessMessage('Profile and account preferences updated successfully across Zooby!');
       setTimeout(() => setSavedSuccessMessage(''), 4000);
     }, 300);
   };
 
+  const roleInfo = getRoleBadgeInfo(user?.role);
+
   const presetAvatars = [
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240',
-    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=240',
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=240',
+    'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240',
+    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=240',
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=240',
-    'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=240'
+    'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=240'
   ];
 
   return (
@@ -130,10 +164,10 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
             <span className="text-[#1b1c1a]">Account Settings</span>
           </div>
           <h1 className="font-quicksand font-bold text-2xl sm:text-3xl text-[#1b1c1a] tracking-tight">
-            Profile &amp; Account Settings
+            Profile &amp; Identity Settings
           </h1>
           <p className="text-sm text-[#877462] mt-1">
-            Manage your personal profile details, camera headshot, notifications, and pet parent account.
+            Manage your personal profile, role attributes, camera photo, and live app-wide identity.
           </p>
         </div>
 
@@ -206,7 +240,7 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
               <div>
                 <h3 className="font-quicksand font-bold text-lg text-[#1b1c1a]">Profile Photo</h3>
                 <p className="text-xs text-[#877462] mt-0.5">
-                  Your headshot shown on appointments &amp; reviews
+                  Your official identity photo across all Zooby dashboards
                 </p>
               </div>
 
@@ -216,7 +250,7 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
                   <img
                     id="settings-user-avatar-img"
                     src={currentAvatarUrl}
-                    alt={name}
+                    alt={displayName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
@@ -234,17 +268,13 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
               </div>
 
               {/* User Identity Badges */}
-              <div className="space-y-1">
-                <h4 className="font-quicksand font-bold text-base text-[#1b1c1a]">{name}</h4>
+              <div className="space-y-1.5">
+                <h4 className="font-quicksand font-bold text-base text-[#1b1c1a]">{getUserDisplayName(user)}</h4>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#ffdcbc] text-[#895100]">
-                    {user?.role === 'ADMIN'
-                      ? 'Super Admin'
-                      : user?.role === 'PROVIDER'
-                      ? 'Care Partner'
-                      : 'Pet Parent'}
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${roleInfo.badgeClass}`}>
+                    {roleInfo.label}
                   </span>
-                  <span className="text-xs text-[#877462]">• {location}</span>
+                  <span className="text-xs text-[#877462]">• {city}</span>
                 </div>
               </div>
 
@@ -309,10 +339,13 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
                 <span>Account Status: Active</span>
               </div>
               <p className="text-[11px] text-[#877462] leading-relaxed">
-                Registered account ID: <code className="text-[#1b1c1a] font-mono">{user?.id || 'usr-demo'}</code>
+                User ID: <code className="text-[#1b1c1a] font-mono">{user?.id || 'usr-demo'}</code>
               </p>
               <p className="text-[11px] text-[#877462]">
-                Member since: <span className="font-semibold text-[#1b1c1a]">{user?.joinedDate || 'September 2024'}</span>
+                Role: <span className="font-semibold text-[#1b1c1a]">{roleInfo.label}</span>
+              </p>
+              <p className="text-[11px] text-[#877462]">
+                Member since: <span className="font-semibold text-[#1b1c1a]">{user?.joinedDate || user?.createdAt || 'January 2025'}</span>
               </p>
             </div>
           </div>
@@ -323,21 +356,50 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
               <div>
                 <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">Personal Details</h3>
                 <p className="text-xs text-[#877462] mt-0.5">
-                  Update your contact info and personal preferences.
+                  Update your contact info, role credentials, and location settings.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Full Name */}
+                {/* First Name */}
                 <div>
-                  <label htmlFor="user-name-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
-                    Full Name
+                  <label htmlFor="user-firstname-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                    First Name
                   </label>
                   <input
-                    id="user-name-input"
+                    id="user-firstname-input"
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100] transition-all"
+                  />
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label htmlFor="user-lastname-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    id="user-lastname-input"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100] transition-all"
+                  />
+                </div>
+
+                {/* Display Name */}
+                <div>
+                  <label htmlFor="user-displayname-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                    Display Name
+                  </label>
+                  <input
+                    id="user-displayname-input"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
                     required
                     className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100] transition-all"
                   />
@@ -368,48 +430,167 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98201 23456"
+                    placeholder="+91 98220 11223"
                     className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100] transition-all"
                   />
                 </div>
 
-                {/* Primary Location */}
+                {/* City */}
                 <div>
+                  <label htmlFor="user-city-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                    City
+                  </label>
+                  <input
+                    id="user-city-input"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Nashik"
+                    className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100] transition-all"
+                  />
+                </div>
+
+                {/* Primary Location / Street */}
+                <div className="sm:col-span-2">
                   <label htmlFor="user-location-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
-                    City / Neighborhood
+                    Address / Neighborhood
                   </label>
                   <input
                     id="user-location-input"
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Bandra West, Mumbai"
+                    placeholder="Gangapur Road, Nashik, Maharashtra"
                     className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100] transition-all"
                   />
                 </div>
               </div>
 
-              {/* Provider specific field */}
+              {/* Role-Specific Fields */}
               {user?.role === 'PROVIDER' && (
-                <div>
-                  <label htmlFor="user-business-name" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
-                    Clinic / Service Brand Name
-                  </label>
-                  <input
-                    id="user-business-name"
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="e.g. Bandra Pet Wellness Clinic"
-                    className="w-full px-4 py-3 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100]"
-                  />
+                <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-200 space-y-4">
+                  <h4 className="font-bold text-xs text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-base">medical_services</span>
+                    <span>Provider Credentials</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-[#544434] mb-1">Clinic / Practice Name</label>
+                      <input
+                        type="text"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="Nashik Paws & Vet Care Clinic"
+                        className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-[#544434] mb-1">Specialization</label>
+                      <input
+                        type="text"
+                        value={specialization}
+                        onChange={(e) => setSpecialization(e.target.value)}
+                        placeholder="Companion Animal Surgery"
+                        className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-[#544434] mb-1">License Number</label>
+                      <input
+                        type="text"
+                        value={licenseNumber}
+                        onChange={(e) => setLicenseNumber(e.target.value)}
+                        placeholder="MH-VET-2015-8842"
+                        className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-[#544434] mb-1">Clinical Experience</label>
+                      <input
+                        type="text"
+                        value={experience}
+                        onChange={(e) => setExperience(e.target.value)}
+                        placeholder="10+ Years"
+                        className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {user?.role === 'VAN_WORKER' && (
+                <div className="p-4 bg-purple-50/60 rounded-2xl border border-purple-200 space-y-4">
+                  <h4 className="font-bold text-xs text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-base">local_shipping</span>
+                    <span>Mobile Technician Fleet Assignments</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-[#544434] mb-1">Assigned Mobile Van Plate</label>
+                      <input
+                        type="text"
+                        value={assignedVanPlate}
+                        onChange={(e) => setAssignedVanPlate(e.target.value)}
+                        placeholder="ZMV-014"
+                        className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-[#544434] mb-1">Technician Job Designation</label>
+                      <input
+                        type="text"
+                        value={jobTitle}
+                        onChange={(e) => setJobTitle(e.target.value)}
+                        placeholder="Lead Mobile Technician"
+                        className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {user?.role === 'RESCUE_PARTNER' && (
+                <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-4">
+                  <h4 className="font-bold text-xs text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-base">volunteer_activism</span>
+                    <span>Rescue Organization &amp; Shelter Details</span>
+                  </h4>
+                  <div>
+                    <label className="block text-xs font-bold text-[#544434] mb-1">Shelter / Organization Name</label>
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="Paws & Hope Rescue"
+                      className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {user?.role === 'ADMIN' && (
+                <div className="p-4 bg-stone-100 rounded-2xl border border-stone-300 space-y-4">
+                  <h4 className="font-bold text-xs text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+                    <span>Administrator Operations Profile</span>
+                  </h4>
+                  <div>
+                    <label className="block text-xs font-bold text-[#544434] mb-1">Administrative Job Title</label>
+                    <input
+                      type="text"
+                      value={jobTitle}
+                      onChange={(e) => setJobTitle(e.target.value)}
+                      placeholder="Administrator"
+                      className="w-full px-3 py-2 bg-white border border-[#dac2ae] rounded-xl text-sm"
+                    />
+                  </div>
                 </div>
               )}
 
               {/* Bio / About */}
               <div>
                 <label htmlFor="user-bio-input" className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
-                  About You / Pet Parent Notes
+                  Bio / Notes
                 </label>
                 <textarea
                   id="user-bio-input"
@@ -426,64 +607,42 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
                 <div>
                   <h4 className="font-quicksand font-bold text-base text-[#1b1c1a]">Emergency Contact</h4>
                   <p className="text-xs text-[#877462]">
-                    Contact person in case of pet health or booking emergencies.
+                    Contact person for rapid notifications during 24/7 SOS or service alerts.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1">
-                      Contact Name &amp; Relationship
-                    </label>
-                    <input
-                      type="text"
-                      value={emergencyContactName}
-                      onChange={(e) => setEmergencyContactName(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1">
-                      Emergency Phone
-                    </label>
-                    <input
-                      type="tel"
-                      value={emergencyPhone}
-                      onChange={(e) => setEmergencyPhone(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100]"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1">
+                    Emergency Contact Details (Name &amp; Phone)
+                  </label>
+                  <input
+                    type="text"
+                    value={emergencyContact}
+                    onChange={(e) => setEmergencyContact(e.target.value)}
+                    placeholder="+91 98220 99887 (Karan Sharma)"
+                    className="w-full px-4 py-2.5 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm text-[#1b1c1a] focus:outline-none focus:ring-2 focus:ring-[#895100]"
+                  />
                 </div>
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-4 border-t border-[#efeeea] flex items-center justify-end gap-3">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#efeeea]">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (user) {
-                      setName(user.name);
-                      setEmail(user.email);
-                      if (user.phone) setPhone(user.phone);
-                      if (user.location) setLocation(user.location);
-                      if (user.avatarUrl) setCurrentAvatarUrl(user.avatarUrl);
-                    }
-                  }}
-                  className="px-5 py-2.5 rounded-xl border border-[#dac2ae] text-[#544434] hover:bg-[#f5f3ef] font-semibold text-xs cursor-pointer transition-colors"
+                  onClick={() => onNavigateTab ? onNavigateTab('dashboard') : (onNavigate ? onNavigate('/dashboard') : null)}
+                  className="px-5 py-2.5 rounded-xl border border-[#dac2ae] text-xs font-bold text-[#544434] hover:bg-[#f5f3ef] transition-colors cursor-pointer"
                 >
-                  Reset
+                  Cancel
                 </button>
-
                 <button
-                  id="save-settings-submit-btn"
+                  id="save-profile-settings-btn"
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-3 rounded-xl bg-[#895100] hover:bg-[#683c00] text-white font-bold text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer hover:scale-101"
+                  className="px-6 py-2.5 rounded-xl bg-[#895100] hover:bg-[#683c00] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Saving...</span>
                     </>
                   ) : (
@@ -499,119 +658,107 @@ export const UserSettingsView: React.FC<UserSettingsViewProps> = ({ onNavigateTa
         </div>
       )}
 
-      {/* SECTION 2: NOTIFICATIONS & REMINDERS */}
+      {/* SECTION 2: PREFERENCES */}
       {activeSubSection === 'preferences' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#dac2ae]/60 shadow-xs space-y-6 max-w-3xl">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#dac2ae]/60 shadow-xs space-y-6 max-w-2xl">
           <div>
-            <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">Notification &amp; Reminder Preferences</h3>
-            <p className="text-xs text-[#877462] mt-0.5">
-              Choose how and when Zooby alerts you about upcoming vaccines, meds, and bookings.
-            </p>
+            <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">Notifications &amp; Alerts</h3>
+            <p className="text-xs text-[#877462] mt-0.5">Control how and when you receive updates.</p>
           </div>
 
           <div className="space-y-4 divide-y divide-[#efeeea]">
-            <div className="pt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between pt-2">
               <div>
-                <div className="text-sm font-bold text-[#1b1c1a]">Vaccination &amp; Medication Reminders</div>
-                <div className="text-xs text-[#877462]">Receive alerts 3 days before booster shots or scheduled deworming</div>
+                <div className="text-sm font-bold text-[#1b1c1a]">Vaccination &amp; Health Reminders</div>
+                <div className="text-xs text-[#877462]">Receive automated alerts when boosters are due.</div>
               </div>
               <input
                 type="checkbox"
                 checked={vaccineReminders}
                 onChange={(e) => setVaccineReminders(e.target.checked)}
-                className="w-5 h-5 accent-[#895100] cursor-pointer rounded"
+                className="w-4 h-4 accent-[#895100] cursor-pointer"
               />
             </div>
 
-            <div className="pt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between pt-4">
               <div>
-                <div className="text-sm font-bold text-[#1b1c1a]">Booking Status &amp; Doctor Chat Alerts</div>
-                <div className="text-xs text-[#877462]">Instant updates when a vet or groomer confirms your appointment</div>
+                <div className="text-sm font-bold text-[#1b1c1a]">Booking SMS &amp; WhatsApp Updates</div>
+                <div className="text-xs text-[#877462]">Real-time status updates when care van is dispatched.</div>
               </div>
               <input
                 type="checkbox"
                 checked={bookingSmsAlerts}
                 onChange={(e) => setBookingSmsAlerts(e.target.checked)}
-                className="w-5 h-5 accent-[#895100] cursor-pointer rounded"
+                className="w-4 h-4 accent-[#895100] cursor-pointer"
               />
             </div>
 
-            <div className="pt-3 flex items-center justify-between">
+            <div className="flex items-center justify-between pt-4">
               <div>
-                <div className="text-sm font-bold text-[#1b1c1a]">Weekly Pet Wellness &amp; Nutrition Digest</div>
-                <div className="text-xs text-[#877462]">Curated breed care guides, seasonal tips, and local pet events</div>
+                <div className="text-sm font-bold text-[#1b1c1a]">Personalized Care Tips &amp; Offers</div>
+                <div className="text-xs text-[#877462]">Receive seasonal care guidelines and promotions.</div>
               </div>
               <input
                 type="checkbox"
                 checked={marketingTips}
                 onChange={(e) => setMarketingTips(e.target.checked)}
-                className="w-5 h-5 accent-[#895100] cursor-pointer rounded"
+                className="w-4 h-4 accent-[#895100] cursor-pointer"
               />
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="pt-4 border-t border-[#efeeea] flex justify-end">
+      {/* SECTION 3: SECURITY */}
+      {activeSubSection === 'security' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#dac2ae]/60 shadow-xs space-y-6 max-w-2xl">
+          <div>
+            <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">Account Security</h3>
+            <p className="text-xs text-[#877462] mt-0.5">Manage authentication password and sessions.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                Current Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full px-4 py-2.5 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#544434] uppercase tracking-wider mb-1.5">
+                New Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter new password"
+                className="w-full px-4 py-2.5 bg-[#fbf9f5] border border-[#dac2ae] rounded-xl text-sm"
+              />
+            </div>
             <button
               type="button"
               onClick={() => {
-                setSavedSuccessMessage('Alert preferences saved.');
+                setSavedSuccessMessage('Security credentials updated successfully.');
                 setTimeout(() => setSavedSuccessMessage(''), 3000);
               }}
-              className="px-6 py-2.5 rounded-xl bg-[#895100] text-white font-bold text-xs hover:bg-[#683c00] transition-colors cursor-pointer"
+              className="py-2.5 px-5 bg-[#895100] text-white text-xs font-bold rounded-xl hover:bg-[#683c00] transition-colors"
             >
-              Save Preferences
+              Update Password
             </button>
           </div>
         </div>
       )}
 
-      {/* SECTION 3: SECURITY & SESSION */}
-      {activeSubSection === 'security' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#dac2ae]/60 shadow-xs space-y-6 max-w-3xl">
-          <div>
-            <h3 className="font-quicksand font-bold text-xl text-[#1b1c1a]">Account Security</h3>
-            <p className="text-xs text-[#877462] mt-0.5">
-              Manage your password, login credentials, and active session tokens.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 bg-[#fbf9f5] border border-[#dac2ae] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-bold text-[#1b1c1a]">Password</div>
-                <div className="text-xs text-[#877462]">Last updated 2 months ago</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  alert(`Password reset link sent to ${email}`);
-                }}
-                className="px-4 py-2 rounded-xl bg-white border border-[#dac2ae] text-[#544434] hover:bg-[#f5f3ef] font-bold text-xs cursor-pointer self-start sm:self-auto"
-              >
-                Change Password
-              </button>
-            </div>
-
-            <div className="p-4 bg-[#fbf9f5] border border-[#dac2ae] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-bold text-[#1b1c1a]">Two-Factor Verification</div>
-                <div className="text-xs text-[#877462]">SMS OTP verification on phone: {phone}</div>
-              </div>
-              <span className="px-3 py-1 bg-[#c2edca] text-[#294e35] text-xs font-bold rounded-full self-start sm:self-auto">
-                Enabled
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Interactive Camera Photo Capture Modal */}
+      {/* Dedicated Camera Capture Modal */}
       <CameraPhotoCaptureModal
         isOpen={isCameraModalOpen}
         onClose={() => setIsCameraModalOpen(false)}
         onPhotoCaptured={handlePhotoCaptured}
-        currentPhotoUrl={currentAvatarUrl}
-        userName={name}
+        title="Capture Your Profile Headshot"
+        idealFrameShape="circle"
       />
     </div>
   );

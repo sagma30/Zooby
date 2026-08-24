@@ -69,7 +69,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({ currentPath,
             >
               <span className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-amber-400">pets</span>
-                <span>Pet Parent (Rohan Sharma)</span>
+                <span>Pet Parent (Sam Sharma)</span>
               </span>
               {role === 'PET_PARENT' && <span className="text-[10px] text-amber-400 font-bold">Active</span>}
             </button>
@@ -83,7 +83,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({ currentPath,
             >
               <span className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-blue-400">medical_services</span>
-                <span>Vet Clinic (Dr. Aarav Iyer)</span>
+                <span>Vet Clinic (Dr. Ananya Mehta)</span>
               </span>
               {role === 'PROVIDER' && <span className="text-[10px] text-blue-400 font-bold">Active</span>}
             </button>
@@ -97,7 +97,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({ currentPath,
             >
               <span className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-emerald-400">volunteer_activism</span>
-                <span>Rescue Partner (Ananya)</span>
+                <span>Rescue Partner (Neha Patil)</span>
               </span>
               {role === 'RESCUE_PARTNER' && <span className="text-[10px] text-emerald-400 font-bold">Active</span>}
             </button>
@@ -111,7 +111,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({ currentPath,
             >
               <span className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-purple-400">local_shipping</span>
-                <span>Mobile Van Tech (Vikram)</span>
+                <span>Mobile Van Tech (Rahul Sharma)</span>
               </span>
               {role === 'VAN_WORKER' && <span className="text-[10px] text-purple-400 font-bold">Active</span>}
             </button>
@@ -125,7 +125,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({ currentPath,
             >
               <span className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-stone-300">admin_panel_settings</span>
-                <span>Super Admin (Priya Sen)</span>
+                <span>Super Admin (Priya Sharma)</span>
               </span>
               {role === 'ADMIN' && <span className="text-[10px] text-stone-300 font-bold">Active</span>}
             </button>

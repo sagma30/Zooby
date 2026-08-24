@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ServiceProvider, ServiceCategory, Pet } from '../types';
+import { useCity } from '../context/CityContext';
+import { CitySelector } from './common/CitySelector';
 
 interface ServicesDiscoveryViewProps {
   providers?: ServiceProvider[];
@@ -18,19 +20,22 @@ export const ServicesDiscoveryView: React.FC<ServicesDiscoveryViewProps> = ({
   activePet,
   onQuickBookCareVan
 }) => {
-  const [selectedCity, setSelectedCity] = useState<string>('Mumbai');
+  const { currentCity } = useCity();
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const petDisplayName = activePet?.name || 'your pet';
 
   const safeProviders = providers || [];
   const filteredProviders = safeProviders.filter((p) => {
+    const matchesCity =
+      p.city.toLowerCase() === currentCity.name.toLowerCase() ||
+      p.city.toLowerCase() === currentCity.id.toLowerCase();
     const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
     const matchesSearch =
       (p?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p?.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p?.area || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCity && matchesCategory && matchesSearch;
   });
 
   return (
@@ -42,25 +47,15 @@ export const ServicesDiscoveryView: React.FC<ServicesDiscoveryViewProps> = ({
             Trusted Pet Care Services
           </h1>
           <p className="text-sm md:text-base text-[#544434] mt-1">
-            Vetted groomers, certified clinics, walkers, and loving sitters for{' '}
+            Vetted groomers, certified clinics, vans, walkers, and sitters in{' '}
+            <strong className="text-[#895100]">{currentCity.name}</strong> for{' '}
             <strong className="text-[#895100]">{petDisplayName}</strong>.
           </p>
         </div>
 
-        {/* City Filter */}
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-[#dac2ae] shadow-2xs">
-          <span className="material-symbols-outlined text-[#895100] text-sm">location_on</span>
-          <span className="text-xs font-bold text-[#544434]">City:</span>
-          <select
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-            className="bg-transparent text-xs font-bold text-[#1b1c1a] focus:outline-none cursor-pointer"
-          >
-            <option value="Mumbai">Mumbai (Active)</option>
-            <option value="Nashik">Nashik</option>
-            <option value="Pune">Pune</option>
-            <option value="Delhi">Delhi NCR</option>
-          </select>
+        {/* City Filter using CitySelector */}
+        <div className="flex items-center gap-2">
+          <CitySelector variant="hero" />
         </div>
       </div>
 

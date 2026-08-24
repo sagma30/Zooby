@@ -2,40 +2,80 @@ import { PaymentRecord, ProviderPayoutRecord } from '../types';
 
 export interface CouponDiscount {
   code: string;
-  description: string;
-  type: 'percentage' | 'flat';
+  discountType: 'percentage' | 'fixed';
   value: number;
-  minAmount?: number;
+  description: string;
 }
 
-export const VALID_COUPONS: CouponDiscount[] = [
-  {
-    code: 'ZOOBY10',
-    description: '10% off on all pet wellness & grooming services',
-    type: 'percentage',
-    value: 10,
-    minAmount: 500
-  },
-  {
-    code: 'PAWSOME',
-    description: 'Flat ₹150 off on mobile van & clinic visits',
-    type: 'flat',
-    value: 150,
-    minAmount: 600
-  },
-  {
-    code: 'FIRSTSPA',
-    description: 'Flat ₹100 introductory discount for new pet parents',
-    type: 'flat',
-    value: 100,
-    minAmount: 400
-  },
-  {
-    code: 'RESCUELOVE',
-    description: '15% shelter discount on adoption health checkups',
-    type: 'percentage',
+export const VALID_COUPONS: Record<string, CouponDiscount> = {
+  ZOOBYFIRST: {
+    code: 'ZOOBYFIRST',
+    discountType: 'percentage',
     value: 15,
-    minAmount: 300
+    description: '15% Off Your First Zooby Care Experience'
+  },
+  VETCARE100: {
+    code: 'VETCARE100',
+    discountType: 'fixed',
+    value: 100,
+    description: '₹100 Off Clinical Consultations'
+  },
+  VANSPA20: {
+    code: 'VANSPA20',
+    discountType: 'percentage',
+    value: 20,
+    description: '20% Off Doorstep Mobile Van Grooming'
+  }
+};
+
+export interface PaymentMethodOption {
+  id: string;
+  type: 'upi' | 'card' | 'netbanking' | 'wallet' | 'pay_later';
+  title: string;
+  subtitle: string;
+  icon: string;
+  badge?: string;
+  isPopular?: boolean;
+}
+
+export const PAYMENT_METHODS: PaymentMethodOption[] = [
+  {
+    id: 'pm-upi',
+    type: 'upi',
+    title: 'UPI (Instant & Zero Fee)',
+    subtitle: 'Google Pay, PhonePe, Paytm, or Any UPI ID',
+    icon: 'account_balance_wallet',
+    badge: 'Fastest',
+    isPopular: true
+  },
+  {
+    id: 'pm-card',
+    type: 'card',
+    title: 'Credit / Debit Cards',
+    subtitle: 'Visa, MasterCard, RuPay, Diners',
+    icon: 'credit_card'
+  },
+  {
+    id: 'pm-netbanking',
+    type: 'netbanking',
+    title: 'NetBanking',
+    subtitle: 'HDFC, ICICI, SBI, Axis, Kotak & 50+ Banks',
+    icon: 'account_balance'
+  },
+  {
+    id: 'pm-wallet',
+    type: 'wallet',
+    title: 'Wallets',
+    subtitle: 'Paytm, Amazon Pay, Mobikwik',
+    icon: 'wallet'
+  },
+  {
+    id: 'pm-doorstep',
+    type: 'pay_later',
+    title: 'Pay on Doorstep',
+    subtitle: 'Pay via Cash / QR Code when Zooby Van Arrives',
+    icon: 'payments',
+    badge: 'Mobile Van Exclusive'
   }
 ];
 
@@ -46,12 +86,12 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     transactionId: 'TXN-2026-0822-44129',
     bookingId: 'bk-101',
     bookingRef: 'ZB-992144',
-    userId: 'usr-parent-aisha',
-    userName: 'Aisha Sharma',
-    userEmail: 'aisha@zooby.care',
+    userId: 'usr-parent-sam',
+    userName: 'Sam Sharma',
+    userEmail: 'sam@zooby.care',
     userPhone: '+91 98220 11223',
     providerId: 'prov-1',
-    providerName: 'Zooby Mobile Care Van #1',
+    providerName: 'Zooby Mobile Grooming Van (ZMV-014)',
     serviceTitle: 'Doorstep Hydrobath Spa & Coat Styling',
     serviceCategory: 'mobile_grooming',
     petId: 'pet-bruno',
@@ -68,7 +108,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     paymentMethod: 'upi',
     paymentMethodDetails: {
       brandOrApp: 'Google Pay',
-      maskedAccount: 'aisha@okhdfcbank'
+      maskedAccount: 'sam@okhdfcbank'
     },
     paymentStatus: 'Successful',
     refundStatus: 'None',
@@ -82,12 +122,12 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     transactionId: 'TXN-2026-0714-88310',
     bookingId: 'bk-100',
     bookingRef: 'ZB-771209',
-    userId: 'usr-parent-aisha',
-    userName: 'Aisha Sharma',
-    userEmail: 'aisha@zooby.care',
+    userId: 'usr-parent-sam',
+    userName: 'Sam Sharma',
+    userEmail: 'sam@zooby.care',
     userPhone: '+91 98220 11223',
     providerId: 'prov-2',
-    providerName: 'Dr. Rohan Kulkarni, Nashik Paws Clinic',
+    providerName: 'Dr. Ananya Mehta, Nashik Paws Clinic',
     serviceTitle: 'Routine Health Checkup & Core Screening',
     serviceCategory: 'vet_consult',
     petId: 'pet-bruno',
@@ -117,12 +157,12 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     transactionId: 'TXN-2026-0519-11902',
     bookingId: 'bk-099',
     bookingRef: 'ZB-662301',
-    userId: 'usr-parent-aisha',
-    userName: 'Aisha Sharma',
-    userEmail: 'aisha@zooby.care',
+    userId: 'usr-parent-sam',
+    userName: 'Sam Sharma',
+    userEmail: 'sam@zooby.care',
     userPhone: '+91 98220 11223',
     providerId: 'prov-1',
-    providerName: 'Zooby Mobile Care Van #1',
+    providerName: 'Zooby Mobile Grooming Van (ZMV-014)',
     serviceTitle: 'Feline Coat De-tangling & Wash',
     serviceCategory: 'grooming',
     petId: 'pet-luna',
@@ -153,12 +193,12 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     transactionId: 'TXN-2026-0410-77621',
     bookingId: 'bk-098',
     bookingRef: 'ZB-551120',
-    userId: 'usr-parent-aisha',
-    userName: 'Aisha Sharma',
-    userEmail: 'aisha@zooby.care',
+    userId: 'usr-parent-sam',
+    userName: 'Sam Sharma',
+    userEmail: 'sam@zooby.care',
     userPhone: '+91 98220 11223',
     providerId: 'prov-2',
-    providerName: 'Dr. Rohan Kulkarni, Nashik Paws Clinic',
+    providerName: 'Dr. Ananya Mehta, Nashik Paws Clinic',
     serviceTitle: 'Tele-Consultation & Diet Consultation',
     serviceCategory: 'vet_consult',
     petId: 'pet-luna',
@@ -174,7 +214,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     paymentMethod: 'upi',
     paymentMethodDetails: {
       brandOrApp: 'PhonePe',
-      maskedAccount: 'aisha@ybl'
+      maskedAccount: 'sam@ybl'
     },
     paymentStatus: 'Refunded',
     refundStatus: 'Refunded',
@@ -191,18 +231,18 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     transactionId: 'TXN-2026-0820-99431',
     bookingId: 'bk-104',
     bookingRef: 'ZB-440912',
-    userId: 'USR-9942-X',
-    userName: 'Aditi Sharma',
-    userEmail: 'aditi.sharma@example.com',
-    userPhone: '+91 98765 43210',
+    userId: 'usr-parent-aarav',
+    userName: 'Aarav Sharma',
+    userEmail: 'aarav@zooby.care',
+    userPhone: '+91 98220 55667',
     providerId: 'prov-1',
-    providerName: 'Zooby Mobile Care Van #1',
+    providerName: 'Zooby Mobile Grooming Van (ZMV-014)',
     serviceTitle: 'Mobile Dog Spa & Nail Trim',
     serviceCategory: 'mobile_grooming',
-    petId: 'pet-ad-2',
-    petName: 'Rocky',
+    petId: 'pet-tommy',
+    petName: 'Tommy',
     petSpecies: 'Dog',
-    petBreed: 'Golden Retriever',
+    petBreed: 'Indie Mix',
     amount: 1200,
     baseFare: 1100,
     discount: 0,
@@ -224,9 +264,9 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     id: 'pay-096',
     paymentId: 'PAY-ZB-330182',
     transactionId: 'TXN-2026-0821-66219',
-    userId: 'usr-parent-aisha',
-    userName: 'Aisha Sharma',
-    userEmail: 'aisha@zooby.care',
+    userId: 'usr-parent-sam',
+    userName: 'Sam Sharma',
+    userEmail: 'sam@zooby.care',
     userPhone: '+91 98220 11223',
     serviceTitle: 'Shelter Vaccination & Medical Support Fee',
     serviceCategory: 'adoption',
@@ -244,7 +284,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     paymentMethod: 'upi',
     paymentMethodDetails: {
       brandOrApp: 'Google Pay',
-      maskedAccount: 'aisha@okhdfcbank'
+      maskedAccount: 'sam@okhdfcbank'
     },
     paymentStatus: 'Successful',
     refundStatus: 'None',
@@ -257,8 +297,8 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
 export const INITIAL_PROVIDER_PAYOUTS: ProviderPayoutRecord[] = [
   {
     id: 'payout-101',
-    providerId: 'prov-2',
-    providerName: 'Dr. Rohan Kulkarni',
+    providerId: 'usr-vet-ananya',
+    providerName: 'Dr. Ananya Mehta',
     amount: 14250,
     status: 'Completed',
     requestedAt: '2026-08-15 06:00 PM',
@@ -269,8 +309,8 @@ export const INITIAL_PROVIDER_PAYOUTS: ProviderPayoutRecord[] = [
   },
   {
     id: 'payout-102',
-    providerId: 'prov-1',
-    providerName: 'Zooby Mobile Care Van Fleet',
+    providerId: 'usr-van-rahul',
+    providerName: 'Rahul Sharma (Zooby Van ZMV-014)',
     amount: 28400,
     status: 'Completed',
     requestedAt: '2026-08-18 07:15 PM',

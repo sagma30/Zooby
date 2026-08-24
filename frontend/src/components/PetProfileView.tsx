@@ -225,6 +225,14 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
 
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between border-b border-[#f5f3ef] pb-3">
+                <span className="text-[#877462] font-medium">Pet Parent</span>
+                <span className="font-bold text-[#895100] flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  {pet.ownerName || 'Sam Sharma'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-[#f5f3ef] pb-3">
                 <span className="text-[#877462] font-medium">Blood Group</span>
                 <span className="font-bold text-[#1b1c1a]">{pet.bloodGroup}</span>
               </div>

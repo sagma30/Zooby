@@ -24,6 +24,7 @@ import {
 } from './data/mockData';
 import { INITIAL_PAYMENTS } from './data/paymentMockData';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CityProvider } from './context/CityContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { DashboardView } from './components/DashboardView';
@@ -44,6 +45,7 @@ import { DemoRoleSwitcher } from './components/common/DemoRoleSwitcher';
 import { UserSettingsView } from './components/UserSettingsView';
 import { AddHealthEventModal } from './components/AddHealthEventModal';
 import { BookingModal } from './components/BookingModal';
+import { BookingFlowModal } from './components/booking/BookingFlowModal';
 import { InboxModal } from './components/InboxModal';
 import { AddPetModal } from './components/AddPetModal';
 import { MobileNavBar } from './components/MobileNavBar';
@@ -164,9 +166,18 @@ function ZoobyAppInner() {
   const [healthEventPet, setHealthEventPet] = useState<Pet | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [bookingProvider, setBookingProvider] = useState<ServiceProvider>(SERVICE_PROVIDERS[0]);
+  const [isBookingFlowModalOpen, setIsBookingFlowModalOpen] = useState(false);
+  const [bookingFlowCategory, setBookingFlowCategory] = useState<string>('mobile_grooming');
+  const [bookingFlowProvider, setBookingFlowProvider] = useState<ServiceProvider | null>(null);
   const [isInboxModalOpen, setIsInboxModalOpen] = useState(false);
   const [isAddPetModalOpen, setIsAddPetModalOpen] = useState(false);
   const [editPetTarget, setEditPetTarget] = useState<Pet | null>(null);
+
+  const handleOpenBookingFlow = (category: string = 'mobile_grooming', provider?: ServiceProvider) => {
+    setBookingFlowCategory(category);
+    setBookingFlowProvider(provider || null);
+    setIsBookingFlowModalOpen(true);
+  };
 
   // 🔴 24/7 Rapid SOS & Live Van Location State
   const [isSOSModalOpen, setIsSOSModalOpen] = useState(false);
@@ -280,25 +291,31 @@ function ZoobyAppInner() {
   };
 
   const handleConfirmBooking = (newBooking: Booking) => {
-    setBookings((prev) => [newBooking, ...prev]);
+    const bookingWithUser: Booking = {
+      ...newBooking,
+      userId: newBooking.userId || user?.id || user?.userId || 'usr-parent-sam',
+      petParentId: newBooking.petParentId || user?.id || user?.userId || 'usr-parent-sam',
+      petParentName: newBooking.petParentName || user?.displayName || user?.name || 'Sam Sharma'
+    };
+    setBookings((prev) => [bookingWithUser, ...prev]);
 
     // If this is a mobile service booking, assign it to a Van Job
-    if (newBooking.isMobileService) {
+    if (bookingWithUser.isMobileService) {
       const newJob: VanJob = {
         id: `vjob-${Date.now()}`,
-        bookingId: newBooking.id,
-        vanWorkerId: 'usr-van-vikram',
-        vanNumber: 'MH 15 ZB 4022',
-        customerName: user?.name || 'Aisha Sharma',
+        bookingId: bookingWithUser.id,
+        vanWorkerId: 'usr-van-rahul',
+        vanNumber: 'ZMV-014',
+        customerName: user?.displayName || user?.name || 'Sam Sharma',
         customerPhone: user?.phone || '+91 98220 11223',
-        customerAddress: newBooking.location,
-        petName: newBooking.petName,
-        petSpecies: newBooking.petSpecies || 'Dog',
-        petBreed: newBooking.petBreed || 'Pet',
-        petPhoto: newBooking.petPhoto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=400',
-        handlingNotes: newBooking.notes || 'Handle with gentle care.',
-        serviceTitle: newBooking.serviceTitle,
-        scheduledTime: `${newBooking.timeSlot} ${newBooking.date}`,
+        customerAddress: bookingWithUser.location,
+        petName: bookingWithUser.petName,
+        petSpecies: bookingWithUser.petSpecies || 'Dog',
+        petBreed: bookingWithUser.petBreed || 'Pet',
+        petPhoto: bookingWithUser.petPhoto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=400',
+        handlingNotes: bookingWithUser.notes || 'Handle with gentle care.',
+        serviceTitle: bookingWithUser.serviceTitle,
+        scheduledTime: `${bookingWithUser.timeSlot} ${bookingWithUser.date}`,
         status: 'Assigned',
         sequenceOrder: vanJobs.length + 1,
         latitude: 19.9975,
@@ -309,36 +326,41 @@ function ZoobyAppInner() {
 
     const newAgendaItem: AgendaItem = {
       id: 'agenda-' + Date.now(),
-      category: newBooking.serviceCategory === 'grooming' || newBooking.serviceCategory === 'mobile_grooming' ? 'Grooming' : 'Health',
-      title: `${newBooking.petName}'s ${newBooking.serviceCategory.replace('_', ' ')}`,
-      timeText: newBooking.date,
-      locationOrDoctor: newBooking.providerName,
-      dueBadge: newBooking.isMobileService ? 'Van Assigned' : 'Confirmed',
-      petName: newBooking.petName,
-      actionText: newBooking.isMobileService ? 'Track Van' : 'View Details',
+      category: bookingWithUser.serviceCategory === 'grooming' || bookingWithUser.serviceCategory === 'mobile_grooming' ? 'Grooming' : 'Health',
+      title: `${bookingWithUser.petName}'s ${bookingWithUser.serviceCategory.replace('_', ' ')}`,
+      timeText: bookingWithUser.date,
+      locationOrDoctor: bookingWithUser.providerName,
+      dueBadge: bookingWithUser.isMobileService ? 'Van Assigned' : 'Confirmed',
+      petName: bookingWithUser.petName,
+      actionText: bookingWithUser.isMobileService ? 'Track Van' : 'View Details',
       actionType: 'view_booking'
     };
     setAgenda((prev) => [newAgendaItem, ...prev]);
 
     const newUpdate: NotificationUpdate = {
       id: 'up-' + Date.now(),
-      text: `Booking confirmed: ${newBooking.serviceTitle} with ${newBooking.providerName} for ${newBooking.petName}.`,
+      text: `Booking confirmed: ${bookingWithUser.serviceTitle} with ${bookingWithUser.providerName} for ${bookingWithUser.petName}.`,
       time: 'Just now',
-      type: newBooking.isMobileService ? 'van' : 'booking',
+      type: bookingWithUser.isMobileService ? 'van' : 'booking',
       read: false
     };
     setUpdates((prev) => [newUpdate, ...prev]);
   };
 
   const handleSavePet = (newPet: Pet) => {
+    const petWithOwner: Pet = {
+      ...newPet,
+      ownerId: newPet.ownerId || user?.id || user?.userId || 'usr-parent-sam',
+      ownerName: newPet.ownerName || user?.displayName || user?.name || 'Sam Sharma'
+    };
     if (editPetTarget) {
-      setPets((prev) => prev.map((p) => (p.id === newPet.id ? newPet : p)));
-      if (selectedPet.id === newPet.id) {
-        setSelectedPet(newPet);
+      setPets((prev) => prev.map((p) => (p.id === petWithOwner.id ? petWithOwner : p)));
+      if (selectedPet.id === petWithOwner.id) {
+        setSelectedPet(petWithOwner);
       }
     } else {
-      setPets((prev) => [...prev, newPet]);
-      setSelectedPet(newPet);
+      setPets((prev) => [...prev, petWithOwner]);
+      setSelectedPet(petWithOwner);
     }
     setEditPetTarget(null);
   };
@@ -589,7 +611,8 @@ function ZoobyAppInner() {
             onOpenSignIn={() => navigate('/login')}
             onOpenSignUp={() => navigate('/signup')}
             onNavigate={navigate}
-            onSelectServiceForBooking={() => navigate('/services')}
+            onSelectServiceForBooking={handleOpenBookingFlow}
+            onOpenSOS={() => setIsSOSModalOpen(true)}
           />
           <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
         </div>
@@ -661,7 +684,8 @@ function ZoobyAppInner() {
           onOpenSignIn={() => navigate('/login')}
           onOpenSignUp={() => navigate('/signup')}
           onNavigate={navigate}
-          onSelectServiceForBooking={() => navigate('/services')}
+          onSelectServiceForBooking={handleOpenBookingFlow}
+          onOpenSOS={() => setIsSOSModalOpen(true)}
         />
         <DemoRoleSwitcher currentPath={currentPath} onNavigate={navigate} />
       </div>
@@ -738,6 +762,41 @@ function ZoobyAppInner() {
       ? 'settings'
       : activeTab;
 
+  // Scoped Data for Active Pet Parent
+  const scopedPets = React.useMemo(() => {
+    if (!user || user.role !== 'PET_PARENT') return pets;
+    const userOwned = pets.filter(
+      (p) =>
+        p.ownerId === user.id ||
+        p.ownerId === user.userId ||
+        p.ownerName === user.name ||
+        p.ownerName === user.displayName
+    );
+    return userOwned.length > 0 ? userOwned : pets;
+  }, [pets, user]);
+
+  const scopedBookings = React.useMemo(() => {
+    if (!user || user.role !== 'PET_PARENT') return bookings;
+    const userOwned = bookings.filter(
+      (b) =>
+        b.userId === user.id ||
+        b.userId === user.userId ||
+        b.petParentId === user.id ||
+        b.petParentId === user.userId ||
+        b.petParentName === user.name ||
+        b.petParentName === user.displayName
+    );
+    return userOwned.length > 0 ? userOwned : bookings;
+  }, [bookings, user]);
+
+  const scopedAgenda = React.useMemo(() => {
+    if (!user || user.role !== 'PET_PARENT') return agenda;
+    const petNames = new Set(scopedPets.map((p) => p.name));
+    return agenda.filter((a) => !a.petName || petNames.has(a.petName));
+  }, [agenda, scopedPets, user]);
+
+  const activeCustomerPet = scopedPets.find((p) => p.id === selectedPet?.id) || scopedPets[0] || selectedPet;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf9f5] text-[#1b1c1a] font-jakarta pb-16 md:pb-0 selection:bg-[#ffdcbc] selection:text-[#683c00]">
       {/* Top Navigation Bar */}
@@ -747,8 +806,8 @@ function ZoobyAppInner() {
           setActiveTab(tab);
           navigate(`/${tab === 'dashboard' ? 'dashboard' : tab}`);
         }}
-        pets={pets}
-        selectedPet={selectedPet}
+        pets={scopedPets}
+        selectedPet={activeCustomerPet}
         setSelectedPet={setSelectedPet}
         unreadCount={unreadCount}
         onOpenNotifications={() => setIsInboxModalOpen(true)}
@@ -766,19 +825,19 @@ function ZoobyAppInner() {
       <main className="flex-grow">
         {resolvedTab === 'dashboard' && (
           <DashboardView
-            pets={pets}
+            pets={scopedPets}
             onSelectPet={handleSelectPet}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
               navigate(`/${tab === 'dashboard' ? 'dashboard' : tab}`);
             }}
             onSelectCategory={handleSelectCategory}
-            onOpenAddHealthEvent={(pet) => handleOpenAddHealthEvent(pet || selectedPet)}
+            onOpenAddHealthEvent={(pet) => handleOpenAddHealthEvent(pet || activeCustomerPet)}
             onOpenAddPet={() => {
               setEditPetTarget(null);
               setIsAddPetModalOpen(true);
             }}
-            agenda={agenda}
+            agenda={scopedAgenda}
             updates={updates}
             activeVanLocation={liveVanLocation}
             onOpenSOS={() => setIsSOSModalOpen(true)}
@@ -787,12 +846,12 @@ function ZoobyAppInner() {
 
         {resolvedTab === 'mypets' && (
           <PetProfileView
-            pet={selectedPet}
-            allPets={pets}
+            pet={activeCustomerPet}
+            allPets={scopedPets}
             onSelectPet={setSelectedPet}
-            onOpenAddHealthEvent={(pet) => handleOpenAddHealthEvent(pet || selectedPet)}
-            onOpenEditProfile={(pet) => handleOpenEditPet(pet || selectedPet)}
-            onOpenBookService={(category, pet) => handleOpenBookServiceGeneric(category, pet || selectedPet)}
+            onOpenAddHealthEvent={(pet) => handleOpenAddHealthEvent(pet || activeCustomerPet)}
+            onOpenEditProfile={(pet) => handleOpenEditPet(pet || activeCustomerPet)}
+            onOpenBookService={(category, pet) => handleOpenBookServiceGeneric(category, pet || activeCustomerPet)}
           />
         )}
 
@@ -802,7 +861,7 @@ function ZoobyAppInner() {
             selectedCategory={selectedServiceCategory}
             onSelectCategory={setSelectedServiceCategory}
             onBookProvider={handleOpenBookProvider}
-            onQuickBookCareVan={() => handleOpenBookServiceGeneric('mobile_grooming', selectedPet)}
+            onQuickBookCareVan={() => handleOpenBookServiceGeneric('mobile_grooming', activeCustomerPet)}
           />
         )}
 
@@ -820,7 +879,7 @@ function ZoobyAppInner() {
 
         {resolvedTab === 'history' && (
           <HistoryView
-            bookings={bookings}
+            bookings={scopedBookings}
             onBookAgain={(booking) => {
               const prov =
                 SERVICE_PROVIDERS.find((p) => p.id === booking.providerId) ||
@@ -893,7 +952,12 @@ function ZoobyAppInner() {
       </main>
 
       {/* Footer */}
-      <Footer onSelectCategory={handleSelectCategory} onNavigate={navigate} />
+      <Footer
+        onSelectCategory={handleSelectCategory}
+        onOpenBookingForService={handleOpenBookingFlow}
+        onOpenSOS={() => setIsSOSModalOpen(true)}
+        onNavigate={navigate}
+      />
 
       {/* Mobile Bottom Navigation Bar */}
       <MobileNavBar
@@ -922,6 +986,29 @@ function ZoobyAppInner() {
         pets={pets}
         selectedPet={selectedPet}
         onConfirmBooking={handleConfirmBooking}
+      />
+
+      {/* Multi-Step Responsive Booking Flow Modal */}
+      <BookingFlowModal
+        isOpen={isBookingFlowModalOpen}
+        onClose={() => setIsBookingFlowModalOpen(false)}
+        initialServiceCategory={bookingFlowCategory}
+        initialProvider={bookingFlowProvider}
+        pets={pets}
+        selectedPet={selectedPet}
+        onConfirmBooking={(newBooking) => {
+          setBookings((prev) => [newBooking, ...prev]);
+          const newUpdate: NotificationUpdate = {
+            id: 'up-bk-' + Date.now(),
+            text: `Booking confirmed: ${newBooking.serviceTitle} for ${newBooking.petName} (${newBooking.date}).`,
+            time: 'Just now',
+            type: 'booking',
+            read: false
+          };
+          setUpdates((prev) => [newUpdate, ...prev]);
+        }}
+        onAddPayment={handleAddPayment}
+        onNavigateToServices={() => navigate('/services')}
       />
 
       <InboxModal
@@ -969,7 +1056,9 @@ function ZoobyAppInner() {
 export function App() {
   return (
     <AuthProvider>
-      <ZoobyAppInner />
+      <CityProvider>
+        <ZoobyAppInner />
+      </CityProvider>
     </AuthProvider>
   );
 }

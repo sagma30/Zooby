@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AdoptionAnimal } from '../../types';
 import { INITIAL_ADOPTION_ANIMALS } from '../../data/mockData';
+import { useCity } from '../../context/CityContext';
+import { CitySelector } from '../common/CitySelector';
+import { Footer } from '../Footer';
+import { ZoobyLogo } from '../common/ZoobyLogo';
+import { PawCursorHeroTrail } from '../common/PawCursorHeroTrail';
 
 interface PublicLandingPageProps {
   adoptionAnimals?: AdoptionAnimal[];
@@ -8,6 +13,7 @@ interface PublicLandingPageProps {
   onOpenSignUp: () => void;
   onNavigate: (path: string) => void;
   onSelectServiceForBooking?: (serviceId: string) => void;
+  onOpenSOS?: () => void;
 }
 
 export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
@@ -15,9 +21,11 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   onOpenSignIn,
   onOpenSignUp,
   onNavigate,
-  onSelectServiceForBooking
+  onSelectServiceForBooking,
+  onOpenSOS
 }) => {
-  const [selectedCityZone, setSelectedCityZone] = useState('Gangapur Road, Nashik');
+  const { currentCity } = useCity();
+  const heroRef = useRef<HTMLElement | null>(null);
   const [selectedServiceFilter, setSelectedServiceFilter] = useState('all');
   const [adoptFilter, setAdoptFilter] = useState<'All' | 'Dog' | 'Cat' | 'Puppy' | 'Kitten'>('All');
   const [selectedPetForModal, setSelectedPetForModal] = useState<AdoptionAnimal | null>(null);
@@ -165,23 +173,17 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     <div className="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-jakarta selection:bg-[#ffdcbc] selection:text-[#683c00]">
       {/* 1. Public Header */}
       <header className="sticky top-0 z-40 bg-[#fbf9f5]/95 backdrop-blur-md border-b border-[#efeeea]">
-        <div className="max-w-[1240px] mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
+        <div className="max-w-[1240px] mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
           {/* Logo */}
           <button
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-2.5 cursor-pointer text-left group"
+            className="cursor-pointer text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#895100] text-white flex items-center justify-center font-bold text-lg shadow-xs group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[22px]">pets</span>
-            </div>
-            <div>
-              <span className="font-quicksand font-bold text-2xl tracking-tight text-[#895100]">
-                Zooby
-              </span>
-              <span className="text-[10px] text-[#716153] block leading-none font-medium">
-                Pet Care Ecosystem • Nashik
-              </span>
-            </div>
+            <ZoobyLogo
+              size="md"
+              subtitle={`Pet Care Ecosystem • ${currentCity.name}`}
+              clickable={true}
+            />
           </button>
 
           {/* Desktop Nav Links */}
@@ -208,17 +210,19 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </a>
           </nav>
 
-          {/* Auth CTAs */}
-          <div className="flex items-center gap-3">
+          {/* City Selector & Auth CTAs */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <CitySelector variant="header" />
+
             <button
               onClick={onOpenSignIn}
-              className="px-4 py-2 text-xs font-bold text-[#544434] hover:text-[#895100] transition-colors cursor-pointer"
+              className="px-3 sm:px-4 py-2 text-xs font-bold text-[#544434] hover:text-[#895100] transition-colors cursor-pointer"
             >
               Sign In
             </button>
             <button
               onClick={onOpenSignUp}
-              className="px-5 py-2.5 rounded-full bg-[#895100] text-white text-xs font-bold hover:bg-[#683c00] transition-all shadow-xs cursor-pointer active:scale-98"
+              className="px-4 sm:px-5 py-2.5 rounded-full bg-[#895100] text-white text-xs font-bold hover:bg-[#683c00] transition-all shadow-xs cursor-pointer hover:scale-[1.02] active:scale-98"
             >
               Get Started
             </button>
@@ -227,40 +231,34 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       </header>
 
       {/* 2. Hero Section */}
-      <section className="relative overflow-hidden pt-8 pb-16 md:py-20 max-w-[1240px] mx-auto px-4 md:px-8">
+      <section
+        ref={heroRef}
+        className="relative overflow-hidden pt-8 pb-16 md:py-20 max-w-[1240px] mx-auto px-4 md:px-8 group"
+      >
+        {/* Subtle Interactive Paw Print Cursor Trail */}
+        <PawCursorHeroTrail heroContainerRef={heroRef} />
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           {/* Left Hero Copy */}
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/70 text-[#895100] text-xs font-bold border border-amber-200">
               <span className="material-symbols-outlined text-[16px]">location_on</span>
-              <span>Serving All Neighborhoods in Nashik</span>
+              <span>Serving All Neighborhoods in {currentCity.name}</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-quicksand text-[#1b1c1a] tracking-tight leading-[1.15]">
               Everything your pet needs.{' '}
               <span className="text-[#895100]">Right at your doorstep.</span>
             </h1>
-
-            <p className="text-sm sm:text-base text-[#544434] leading-relaxed max-w-xl">
-              From climate-controlled mobile grooming vans and licensed clinic veterinarians to dog walkers and verified shelter adoptions. Zooby is Nashik’s first all-in-one pet care ecosystem.
+               <p className="text-base text-[#544434] leading-relaxed">
+              From climate-controlled mobile grooming vans and licensed clinic veterinarians to dog walkers and verified shelter adoptions. Zooby is {currentCity.name}’s first all-in-one pet care ecosystem.
             </p>
 
             {/* Quick Service Search / Action Box */}
             <div className="p-3 bg-white rounded-2xl border border-[#e6e2dd] shadow-sm flex flex-col sm:flex-row items-center gap-3">
               <div className="flex-1 w-full flex items-center gap-2 px-3 py-2 bg-[#f6f4ee] rounded-xl text-xs">
                 <span className="material-symbols-outlined text-[18px] text-[#895100]">location_city</span>
-                <select
-                  value={selectedCityZone}
-                  onChange={(e) => setSelectedCityZone(e.target.value)}
-                  className="bg-transparent font-bold text-[#1b1c1a] focus:outline-hidden w-full cursor-pointer"
-                >
-                  <option value="Gangapur Road, Nashik">Gangapur Road, Nashik</option>
-                  <option value="College Road, Nashik">College Road, Nashik</option>
-                  <option value="Indira Nagar, Nashik">Indira Nagar, Nashik</option>
-                  <option value="Mahatma Nagar, Nashik">Mahatma Nagar, Nashik</option>
-                  <option value="Panchavati, Nashik">Panchavati, Nashik</option>
-                  <option value="Govind Nagar, Nashik">Govind Nagar, Nashik</option>
-                </select>
+                <span className="font-bold text-[#1b1c1a]">Active Hub: {currentCity.name} ({currentCity.coverageAreas.slice(0, 3).join(', ')})</span>
               </div>
 
               <button
@@ -270,7 +268,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 }}
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#895100] text-white text-xs font-bold hover:bg-[#683c00] transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
               >
-                <span>Explore Services</span>
+                <span>Explore {currentCity.name} Services</span>
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </button>
             </div>
@@ -730,64 +728,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         </div>
       </section>
 
-      {/* 9. Comprehensive Public Footer */}
-      <footer className="bg-[#1b1c1a] text-stone-400 py-12 text-xs border-t border-stone-800">
-        <div className="max-w-[1240px] mx-auto px-4 md:px-8 grid grid-cols-2 md:grid-cols-5 gap-8">
-          <div className="col-span-2 space-y-3">
-            <div className="flex items-center gap-2 text-white font-bold text-lg font-quicksand">
-              <span className="material-symbols-outlined text-[22px] text-amber-400">pets</span>
-              <span>Zooby</span>
-            </div>
-            <p className="text-xs text-stone-400 max-w-sm leading-relaxed">
-              Hyperlocal pet-care ecosystem connecting pet parents with verified providers, veterinary care, rescue partners, and mobile care vans in Nashik.
-            </p>
-            <p className="text-[11px] text-stone-500 pt-2">
-              © {new Date().getFullYear()} Zooby Care India Pvt. Ltd. All rights reserved.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Services</h4>
-            <ul className="space-y-1.5 text-stone-400">
-              <li><a href="#services" className="hover:text-amber-300">Mobile Grooming Van</a></li>
-              <li><a href="#services" className="hover:text-amber-300">Veterinary Care</a></li>
-              <li><a href="#services" className="hover:text-amber-300">Dog Walking</a></li>
-              <li><a href="#services" className="hover:text-amber-300">Pet Boarding</a></li>
-              <li><a href="#services" className="hover:text-amber-300">Pet Training</a></li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Ecosystem</h4>
-            <ul className="space-y-1.5 text-stone-400">
-              <li><a href="#mobile-van" className="hover:text-amber-300">Mobile Care Van</a></li>
-              <li><a href="#adopt" className="hover:text-amber-300">Adopt a Pet</a></li>
-              <li><a href="#how-it-works" className="hover:text-amber-300">How Zooby Works</a></li>
-              <li><a href="#about" className="hover:text-amber-300">About Zooby</a></li>
-              <li><button onClick={() => onNavigate('/signup')} className="hover:text-amber-300 cursor-pointer text-left">Partner with Zooby</button></li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Contact &amp; Support</h4>
-            <ul className="space-y-1.5 text-stone-400">
-              <li>Helpline: +91 98220 00001</li>
-              <li>support@zooby.care</li>
-              <li>Gangapur Road, Nashik, MH</li>
-              <li className="pt-2">
-                <button
-                  onClick={onOpenSignIn}
-                  className="text-amber-400 font-bold hover:underline cursor-pointer"
-                >
-                  Unified Portal Sign In →
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </footer>
-
-      {/* 10. Meet Pet / View Profile Adoption Modal */}
+      {/* 9. Meet Pet / View Profile Adoption Modal */}
       {selectedPetForModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-[#e6e2dd] animate-fade-in max-h-[90vh] flex flex-col">
@@ -876,6 +817,13 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Single Final Professional Footer */}
+      <Footer
+        onNavigate={onNavigate}
+        onOpenBookingForService={onSelectServiceForBooking}
+        onOpenSOS={onOpenSOS}
+      />
     </div>
   );
 };

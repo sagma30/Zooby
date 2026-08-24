@@ -7,6 +7,8 @@ import {
   ServiceCategory
 } from '../../types';
 import { VALID_COUPONS, CouponDiscount } from '../../data/paymentMockData';
+import { useAuth } from '../../context/AuthContext';
+import { getUserDisplayName } from '../../utils/identity';
 
 export interface PaymentIntentDetails {
   bookingId?: string;
@@ -47,6 +49,9 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   onPaymentSuccess,
   onPaymentCancel
 }) => {
+  const { user } = useAuth();
+  const currentCustomerName = intent?.customerName || getUserDisplayName(user, 'Sam Sharma');
+
   // Method selection state
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('upi');
   const [selectedUpiApp, setSelectedUpiApp] = useState<'gpay' | 'phonepe' | 'paytm' | 'custom'>('gpay');
@@ -58,7 +63,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
   const [cardExpiry, setCardExpiry] = useState('08/28');
   const [cardCvv, setCardCvv] = useState('•••');
-  const [cardHolder, setCardHolder] = useState(intent?.customerName || 'Aisha Sharma');
+  const [cardHolder, setCardHolder] = useState(currentCustomerName);
   const [saveCard, setSaveCard] = useState(true);
 
   // Coupon state
@@ -161,10 +166,10 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
       transactionId,
       bookingId: intent.bookingId,
       bookingRef: intent.bookingRef,
-      userId: 'usr-parent-aisha',
-      userName: intent.customerName || 'Aisha Sharma',
-      userEmail: intent.customerEmail || 'aisha@zooby.care',
-      userPhone: intent.customerPhone || '+91 98220 11223',
+      userId: user?.id || user?.userId || 'usr-parent-sam',
+      userName: intent.customerName || getUserDisplayName(user, 'Sam Sharma'),
+      userEmail: intent.customerEmail || user?.email || 'sam@zooby.care',
+      userPhone: intent.customerPhone || user?.phone || '+91 98220 11223',
       providerId: intent.providerId,
       providerName: intent.providerName || 'Zooby Care Provider',
       serviceTitle: intent.serviceTitle,

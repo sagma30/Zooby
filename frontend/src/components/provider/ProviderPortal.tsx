@@ -13,6 +13,7 @@ import {
 } from '../../data/providerMockData';
 
 import { emergencyStore, EmergencyState } from '../../services/emergencyStore';
+import { getDynamicGreeting, getUserDisplayName, getPersonalizedEmptyState } from '../../utils/identity';
 
 interface ProviderPortalProps {
   currentTab?: string;
@@ -110,19 +111,14 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
         <div>
           {/* Brand Header */}
           <div className="p-6 border-b border-[#efeeea] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#ffeed9] text-[#895100] flex items-center justify-center font-bold shadow-2xs">
-                <span className="material-symbols-outlined text-[22px] filled-icon">stethoscope</span>
-              </div>
-              <div>
-                <span className="font-quicksand font-bold text-xl text-[#895100] leading-none block">
-                  Zooby Pro
-                </span>
-                <span className="text-[10px] text-[#877462] font-semibold tracking-wider uppercase">
-                  Provider Portal
-                </span>
-              </div>
-            </div>
+            <ZoobyLogo
+              size="sm"
+              subtitle="Provider Portal"
+              badgeText="Care Partner"
+              badgeColor="blue"
+              clickable={true}
+              onClick={() => handleTabChange('dashboard')}
+            />
           </div>
 
           {/* Navigation Links */}
@@ -157,15 +153,15 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
         <div className="p-4 border-t border-[#efeeea] space-y-3">
           <div className="flex items-center gap-3 p-2 bg-[#f4ebd9]/40 rounded-2xl border border-[#dac2ae]/40">
             <img
-              src={user?.avatarUrl || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=120'}
-              alt={user?.name}
+              src={user?.profilePhoto || user?.avatarUrl || 'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240'}
+              alt={getUserDisplayName(user, 'Dr. Ananya Mehta')}
               className="w-9 h-9 rounded-full object-cover border border-[#895100]/30"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-[#1b1c1a] truncate">{user?.name || 'Dr. Aarav Mehta'}</p>
+              <p className="text-xs font-bold text-[#1b1c1a] truncate">{getUserDisplayName(user, 'Dr. Ananya Mehta')}</p>
               <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Verified Provider</span>
+                <span>Verified Specialist</span>
               </p>
             </div>
           </div>
@@ -191,15 +187,20 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
             >
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
-            <h1 className="font-quicksand font-bold text-2xl text-[#1b1c1a] capitalize">
-              {navItems.find((n) => n.id === activeTab)?.label || 'Provider Portal'}
-            </h1>
+            <div>
+              <h1 className="font-quicksand font-bold text-2xl text-[#1b1c1a] capitalize">
+                {navItems.find((n) => n.id === activeTab)?.label || 'Provider Portal'}
+              </h1>
+              <p className="text-xs text-[#877462]">
+                {getDynamicGreeting(user)}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 bg-[#ffdcbc]/40 px-3 py-1.5 rounded-full text-xs font-bold text-[#895100]">
               <span className="material-symbols-outlined text-sm filled-icon">storefront</span>
-              <span>Paws &amp; Claws Wellness Clinic</span>
+              <span>{user?.businessName || user?.organizationName || 'Nashik Paws & Vet Care Clinic'}</span>
             </div>
 
             <button
@@ -356,7 +357,12 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
                 </div>
 
                 <div className="divide-y divide-[#efeeea]">
-                  {appointments.map((apt) => (
+                  {appointments.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-[#877462]">
+                      <p>{getPersonalizedEmptyState(user, 'schedule')}</p>
+                    </div>
+                  ) : (
+                    appointments.map((apt) => (
                     <div key={apt.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-start gap-3.5">
                         <img
@@ -415,7 +421,7 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )))}
                 </div>
               </div>
             </div>

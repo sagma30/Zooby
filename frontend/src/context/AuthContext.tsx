@@ -10,6 +10,7 @@ interface SignupPayload {
   businessName?: string;
   serviceCategory?: ServiceCategory;
   assignedVanPlate?: string;
+  city?: string;
 }
 
 interface AuthContextType {
@@ -28,8 +29,38 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = 'zooby_auth_session_v4';
-const REGISTERED_ACCOUNTS_KEY = 'zooby_registered_accounts';
+const AUTH_STORAGE_KEY = 'zooby_auth_session_v5';
+const REGISTERED_ACCOUNTS_KEY = 'zooby_registered_accounts_v5';
+
+function normalizeUserProfile(rawUser: Partial<UserProfile>): UserProfile {
+  const name = rawUser.displayName || rawUser.name || 'Zooby Member';
+  const nameParts = name.trim().split(' ').filter(Boolean);
+  const firstName = rawUser.firstName || nameParts[0] || 'Member';
+  const lastName = rawUser.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined);
+  const displayName = rawUser.displayName || (firstName && lastName ? `${firstName} ${lastName}` : firstName);
+  const id = rawUser.id || rawUser.userId || `usr-${(rawUser.role || 'pet_parent').toLowerCase()}-${Date.now()}`;
+  const avatar = rawUser.profilePhoto || rawUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240';
+
+  return {
+    ...rawUser,
+    id,
+    userId: id,
+    firstName,
+    lastName,
+    displayName,
+    name: displayName,
+    email: rawUser.email || `${firstName.toLowerCase()}@zooby.care`,
+    phone: rawUser.phone || '+91 98220 11223',
+    avatarUrl: avatar,
+    profilePhoto: avatar,
+    city: rawUser.city || 'Nashik',
+    location: rawUser.location || (rawUser.city ? `${rawUser.city}, Maharashtra` : 'Nashik, Maharashtra'),
+    role: rawUser.role || 'PET_PARENT',
+    accountStatus: rawUser.accountStatus || 'Active',
+    createdAt: rawUser.createdAt || rawUser.joinedDate || 'Today',
+    joinedDate: rawUser.joinedDate || rawUser.createdAt || 'Today'
+  } as UserProfile;
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (path: string) => void }> = ({
   children,
@@ -45,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
       if (savedSession) {
         const parsed = JSON.parse(savedSession);
         if (parsed && parsed.role) {
-          setUser(parsed);
+          setUser(normalizeUserProfile(parsed));
         }
       }
     } catch (e) {
@@ -57,9 +88,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
 
   // Save session when user changes
   const saveSession = (newUser: UserProfile | null) => {
-    setUser(newUser);
-    if (newUser) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+    const normalized = newUser ? normalizeUserProfile(newUser) : null;
+    setUser(normalized);
+    if (normalized) {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalized));
     } else {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     }
@@ -71,9 +103,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
    */
   const login = async (emailOrPhone: string, _password?: string): Promise<UserProfile> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 350));
+    await new Promise((res) => setTimeout(res, 250));
 
-    // Automatic role detection from credentials lookup
+    // Automatic role detection and profile lookup
     const resolvedUser = findUserByCredentials(emailOrPhone);
 
     if (!resolvedUser) {
@@ -81,9 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
       throw new Error('User not found. Please check your credentials or register.');
     }
 
-    saveSession(resolvedUser);
+    const normalized = normalizeUserProfile(resolvedUser);
+    saveSession(normalized);
     setIsLoading(false);
-    return resolvedUser;
+    return normalized;
   };
 
   /**
@@ -91,18 +124,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
    */
   const loginWithGoogle = async (): Promise<UserProfile> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 400));
+    await new Promise((res) => setTimeout(res, 300));
 
-    const googleUser: UserProfile = {
+    const googleUser = normalizeUserProfile({
       id: `usr-google-${Date.now()}`,
-      name: 'Aisha Sharma',
-      email: 'aisha.sharma@gmail.com',
+      firstName: 'Sam',
+      lastName: 'Sharma',
+      displayName: 'Sam Sharma',
+      name: 'Sam Sharma',
+      email: 'sam.sharma@gmail.com',
       phone: '+91 98220 11223',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240',
       location: 'Gangapur Road, Nashik',
+      city: 'Nashik',
       role: 'PET_PARENT',
       joinedDate: 'Today via Google'
-    };
+    });
 
     saveSession(googleUser);
     setIsLoading(false);
@@ -111,11 +148,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
 
   const loginDemo = async (targetRole: UserRole): Promise<UserProfile> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 250));
+    await new Promise((res) => setTimeout(res, 180));
     const demo = DEMO_USERS[targetRole].user;
-    saveSession(demo);
+    const normalized = normalizeUserProfile(demo);
+    saveSession(normalized);
     setIsLoading(false);
-    return demo;
+    return normalized;
   };
 
   /**
@@ -123,33 +161,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
    */
   const signup = async (details: SignupPayload): Promise<UserProfile> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 400));
+    await new Promise((res) => setTimeout(res, 300));
 
     const assignedRole: UserRole = details.role || 'PET_PARENT';
 
-    let avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=160';
+    let avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=240';
     if (assignedRole === 'PROVIDER') {
-      avatar = 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=240';
+      avatar = 'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240';
     } else if (assignedRole === 'RESCUE_PARTNER') {
       avatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=240';
     } else if (assignedRole === 'VAN_WORKER') {
       avatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=240';
+    } else if (assignedRole === 'ADMIN') {
+      avatar = 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=240';
     }
 
-    const newUser: UserProfile = {
+    const nameParts = details.name.trim().split(' ').filter(Boolean);
+    const firstName = nameParts[0] || 'Member';
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
+
+    const newUser = normalizeUserProfile({
       id: `usr-${assignedRole.toLowerCase()}-${Date.now()}`,
-      name: details.name,
+      firstName,
+      lastName,
+      displayName: details.name.trim(),
+      name: details.name.trim(),
       email: details.email,
       phone: details.phone || '+91 98220 00000',
       avatarUrl: avatar,
-      location: 'Nashik, Maharashtra',
+      profilePhoto: avatar,
+      city: details.city || 'Nashik',
+      location: details.city ? `${details.city}, Maharashtra` : 'Nashik, Maharashtra',
       role: assignedRole,
       businessName: details.businessName,
+      organizationName: details.businessName,
       serviceCategory: details.serviceCategory,
-      assignedVanPlate: details.assignedVanPlate || (assignedRole === 'VAN_WORKER' ? 'MH 15 ZB 4022' : undefined),
+      assignedVanPlate: details.assignedVanPlate || (assignedRole === 'VAN_WORKER' ? 'ZMV-014' : undefined),
       isVerified: assignedRole === 'PET_PARENT' || assignedRole === 'VAN_WORKER',
+      accountStatus: 'Active',
       joinedDate: 'Today'
-    };
+    });
 
     // Save to persistent registered accounts
     try {
@@ -178,7 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
 
   const updateUserProfile = (updated: Partial<UserProfile>) => {
     if (!user) return;
-    const nextUser = { ...user, ...updated };
+    const nextUser = normalizeUserProfile({ ...user, ...updated });
     saveSession(nextUser);
 
     // Also sync with registered accounts if present
@@ -186,7 +237,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
       const stored = localStorage.getItem(REGISTERED_ACCOUNTS_KEY);
       if (stored) {
         const accounts: UserProfile[] = JSON.parse(stored);
-        const updatedAccounts = accounts.map((acc) => (acc.id === nextUser.id || acc.email === nextUser.email ? nextUser : acc));
+        const updatedAccounts = accounts.map((acc) =>
+          acc.id === nextUser.id || acc.email === nextUser.email ? nextUser : acc
+        );
         localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(updatedAccounts));
       }
     } catch (err) {
@@ -196,7 +249,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; onNavigate?: (p
 
   const value: AuthContextType = {
     user,
-    userId: user?.id || null,
+    userId: user?.id || user?.userId || null,
     role: user?.role || null,
     isAuthenticated: !!user,
     isLoading,
@@ -218,5 +271,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
-

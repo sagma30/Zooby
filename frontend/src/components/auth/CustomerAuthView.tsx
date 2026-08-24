@@ -124,7 +124,7 @@ export const CustomerAuthView: React.FC<CustomerAuthViewProps> = ({
             "Zooby makes managing Bruno's vet checkups, grooming appointments, and vaccination reminders effortless!"
           </p>
           <p className="text-xs text-[#877462] mt-2 font-semibold">
-            — Rohan Deshmukh • Pet Parent to Bruno (Golden Retriever)
+            — Sam Sharma • Pet Parent to Bruno (Golden Retriever)
           </p>
         </div>
       </div>
@@ -161,7 +161,7 @@ export const CustomerAuthView: React.FC<CustomerAuthViewProps> = ({
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-[#895100]">Demo Account: Pet Parent</p>
-                <p className="text-[11px] text-[#877462] font-mono">aisha@zooby.care (Aisha &amp; Bruno)</p>
+                <p className="text-[11px] text-[#877462] font-mono">sam@zooby.care (Sam &amp; Bruno)</p>
               </div>
             </div>
             <button

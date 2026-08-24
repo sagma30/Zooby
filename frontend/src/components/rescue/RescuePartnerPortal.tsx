@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { AdoptionAnimal, AdoptionApplication, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { getDynamicGreeting, getUserDisplayName, getPersonalizedEmptyState } from '../../utils/identity';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface RescuePartnerPortalProps {
   user?: UserProfile;
@@ -28,15 +30,20 @@ export const RescuePartnerPortal: React.FC<RescuePartnerPortalProps> = ({
   onNavigate
 }) => {
   const { user: authUser, logout } = useAuth();
-  const activeUser = propUser || authUser || {
-    id: 'rescue-default',
-    name: 'Ananya Deshmukh',
-    email: 'ananya@zooby.care',
-    phone: '+91 98220 77889',
+  const activeUser = authUser || propUser || {
+    id: 'usr-rescue-neha',
+    name: 'Neha Patil',
+    displayName: 'Neha Patil',
+    firstName: 'Neha',
+    lastName: 'Patil',
+    email: 'neha@pawsandhope.org',
+    phone: '+91 98222 77889',
     role: 'RESCUE_PARTNER' as const,
     location: 'Indira Nagar, Nashik',
-    businessName: 'Nashik Strays & Animal Welfare Trust',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=240'
+    city: 'Nashik',
+    businessName: 'Paws & Hope Rescue',
+    organizationName: 'Paws & Hope Rescue',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=240'
   };
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'animals' | 'applications' | 'settings'>(
@@ -131,20 +138,14 @@ export const RescuePartnerPortal: React.FC<RescuePartnerPortalProps> = ({
     <div className="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-jakarta">
       {/* Rescue Partner Navigation Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#e6e2dd] px-4 md:px-8 py-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#895100] text-white flex items-center justify-center font-bold shadow-xs">
-            <span className="material-symbols-outlined text-[22px]">pets</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-quicksand font-bold text-xl text-[#895100]">Zooby</span>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider">
-                Rescue Partner Portal
-              </span>
-            </div>
-            <p className="text-xs text-[#716153] hidden sm:block">{activeUser.businessName || 'Nashik Animal Rescue Network'}</p>
-          </div>
-        </div>
+        <ZoobyLogo
+          size="sm"
+          subtitle={activeUser.businessName || 'Paws & Hope Rescue'}
+          badgeText="Rescue Partner"
+          badgeColor="emerald"
+          clickable={true}
+          onClick={() => setActiveTab('dashboard')}
+        />
 
         {/* Center Tabs */}
         <nav className="hidden md:flex items-center gap-1 bg-[#f6f4ee] p-1 rounded-xl border border-[#e6e2dd] text-xs font-bold text-[#544434]">
@@ -250,6 +251,30 @@ export const RescuePartnerPortal: React.FC<RescuePartnerPortalProps> = ({
         {/* Tab 1: Dashboard Overview */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
+            {/* Personalized Welcome Header */}
+            <div className="bg-gradient-to-r from-[#2c402e] via-[#1e3020] to-[#122013] text-white rounded-3xl p-6 md:p-8 border border-emerald-900/60 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{activeUser.businessName || activeUser.organizationName || 'Paws & Hope Rescue'} • Verified Shelter Partner</span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold font-quicksand text-white">
+                  {getDynamicGreeting(activeUser)}
+                </h2>
+                <p className="text-xs md:text-sm text-emerald-100/80 mt-1 max-w-xl">
+                  Manage animal intakes, coordinate screening with applicants, and facilitate transparent adoptions.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsAddAnimalOpen(true)}
+                className="py-3 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer shrink-0"
+              >
+                <span className="material-symbols-outlined text-lg">add_circle</span>
+                <span>+ List New Rescue Animal</span>
+              </button>
+            </div>
+
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-[#e6e2dd] shadow-xs">

@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { Pet, UserProfile } from '../types';
+import { useCity } from '../context/CityContext';
+import { CitySelector } from './common/CitySelector';
+import { getUserDisplayName } from '../utils/identity';
+import { ZoobyLogo } from './common/ZoobyLogo';
 
 interface HeaderProps {
   activeTab: string;
@@ -7,13 +11,13 @@ interface HeaderProps {
   pets: Pet[];
   selectedPet: Pet;
   setSelectedPet: (pet: Pet) => void;
-  unreadCount: number;
-  onOpenNotifications: () => void;
-  onOpenAddPet: () => void;
+  unreadCount?: number;
+  onOpenNotifications?: () => void;
+  onOpenAddPet?: () => void;
   onOpenSOS?: () => void;
-  currentUser: UserProfile | null;
-  onOpenSignIn: () => void;
-  onSignOut: () => void;
+  currentUser?: UserProfile | null;
+  onOpenSignIn?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,6 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSignIn,
   onSignOut
 }) => {
+  const { currentCity } = useCity();
   const [showPetMenu, setShowPetMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -48,19 +53,13 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="brand-logo-btn"
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-2 cursor-pointer group text-left"
+            className="cursor-pointer text-left"
           >
-            <div className="w-9 h-9 rounded-xl bg-[#895100] text-white flex items-center justify-center font-bold text-lg font-quicksand shadow-xs group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[20px]">pets</span>
-            </div>
-            <div>
-              <span className="font-quicksand font-bold text-2xl tracking-tight text-[#895100]">
-                Zooby
-              </span>
-              <span className="text-[9px] text-[#716153] block -mt-1 font-semibold">
-                Nashik Pet Care
-              </span>
-            </div>
+            <ZoobyLogo
+              size="sm"
+              subtitle={`${currentCity.name} Pet Care`}
+              clickable={true}
+            />
           </button>
 
           {/* Desktop Navigation */}
@@ -206,6 +205,9 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
+          {/* City Selector */}
+          <CitySelector variant="header" />
+
           {/* 🔴 24/7 Rapid SOS Emergency Button */}
           {onOpenSOS && (
             <button
@@ -241,12 +243,12 @@ export const Header: React.FC<HeaderProps> = ({
                 id="user-profile-menu-btn"
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-[#ff9f1c]/40 transition-all cursor-pointer"
-                title={`${currentUser.name || 'User'} (${currentUser.email || ''})`}
+                title={`${getUserDisplayName(currentUser)} (${currentUser.email || ''})`}
               >
                 <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#ff9f1c] shadow-xs">
                   <img
-                    src={currentUser.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"}
-                    alt={currentUser.name || 'User'}
+                    src={currentUser.profilePhoto || currentUser.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120"}
+                    alt={getUserDisplayName(currentUser)}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -266,11 +268,11 @@ export const Header: React.FC<HeaderProps> = ({
             {showUserMenu && currentUser && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#efeeea] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="px-4 py-3 border-b border-[#efeeea]">
-                  <div className="text-sm font-bold text-[#1b1c1a] truncate">{currentUser.name || 'User'}</div>
+                  <div className="text-sm font-bold text-[#1b1c1a] truncate">{getUserDisplayName(currentUser)}</div>
                   <div className="text-xs text-[#877462] truncate">{currentUser.email || ''}</div>
                   <div className="mt-1 flex items-center gap-1 text-[11px] text-[#41674b] font-semibold">
                     <span className="w-2 h-2 rounded-full bg-[#41674b]"></span>
-                    <span>Signed In ({currentUser.location || 'Nashik'})</span>
+                    <span>Signed In ({currentUser.location || currentUser.city || 'Nashik'})</span>
                   </div>
                 </div>
 

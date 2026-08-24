@@ -106,8 +106,8 @@ export const AdminEmergencyView: React.FC<AdminEmergencyViewProps> = () => {
                 </div>
                 <div>
                   <span className="text-[#877462] block text-[10px] uppercase font-bold">Supporting Vet</span>
-                  <strong className="text-[#1b1c1a] block mt-0.5">{activeEmergency.vetAssigned?.name || 'Dr. Aarav Mehta'}</strong>
-                  <span className="text-[#544434]">{activeEmergency.vetAssigned?.clinic}</span>
+                  <strong className="text-[#1b1c1a] block mt-0.5">{activeEmergency.vetAssigned?.name || 'Dr. Ananya Mehta'}</strong>
+                  <span className="text-[#544434]">{activeEmergency.vetAssigned?.clinic || 'Nashik Paws & Vet Care Clinic'}</span>
                 </div>
               </div>
 
@@ -195,7 +195,7 @@ export const AdminEmergencyView: React.FC<AdminEmergencyViewProps> = () => {
                 destinationPosition={{
                   lat: 19.9910,
                   lng: 73.7920,
-                  title: `🩺 ${activeEmergency.vetAssigned?.name || 'Dr. Mehta'} (Clinic Support)`
+                  title: `🩺 ${activeEmergency.vetAssigned?.name || 'Dr. Ananya Mehta'} (Clinic Support)`
                 }}
                 showRouteLine={true}
                 zoom={14}

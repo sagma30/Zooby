@@ -6,6 +6,8 @@ import {
   Pet
 } from '../types';
 
+import { getCityById, findNearestSupportedCity, ZoobyCity } from '../data/citiesData';
+
 export interface EmergencyTimelineEntry {
   time: string;
   description: string;
@@ -13,6 +15,8 @@ export interface EmergencyTimelineEntry {
 }
 
 export interface EmergencyState extends EmergencyIncident {
+  cityId: string;
+  cityName: string;
   isMoving: boolean;
   vanCoordinates: { lat: number; lng: number; heading?: number };
   emergencyCoordinates: { lat: number; lng: number; address: string };
@@ -29,20 +33,6 @@ export interface EmergencyState extends EmergencyIncident {
   treatmentAdministered?: string;
 }
 
-// Initial Default Emergency Coordinates (Gangapur Road, Nashik)
-const DEFAULT_PET_LOCATION = {
-  lat: 20.0055,
-  lng: 73.7650,
-  address: 'Silver Palm Enclave, Gangapur Road, Nashik'
-};
-
-// Initial Van Starting Location (College Road Hub, ~3.2 km away)
-const DEFAULT_VAN_START = {
-  lat: 19.9880,
-  lng: 73.7890,
-  heading: 320
-};
-
 type Listener = (...args: any[]) => void;
 
 class EmergencyStore {
@@ -50,6 +40,7 @@ class EmergencyStore {
   private activeIncident: EmergencyState | null = null;
   private movementTimer: any = null;
   private stepIndex: number = 0;
+  private simulationSteps: Array<{ distanceKm: number; etaMinutes: number; lat: number; lng: number; msg: string }> = [];
 
   on(event: string, fn: Listener) {
     if (!this.listeners[event]) this.listeners[event] = [];
@@ -71,17 +62,6 @@ class EmergencyStore {
       }
     });
   }
-
-  // Waypoint steps for realistic simulation approach
-  private simulationSteps = [
-    { distanceKm: 3.2, etaMinutes: 8, lat: 19.9880, lng: 73.7890, msg: 'Your Zooby Van is on the way.' },
-    { distanceKm: 2.8, etaMinutes: 7, lat: 19.9920, lng: 73.7840, msg: 'Your Zooby Van is on the way.' },
-    { distanceKm: 2.1, etaMinutes: 5, lat: 19.9960, lng: 73.7780, msg: 'Your Zooby Van is approximately 5 minutes away.' },
-    { distanceKm: 1.4, etaMinutes: 3, lat: 20.0000, lng: 73.7720, msg: 'Your Zooby Van is approximately 3 minutes away.' },
-    { distanceKm: 0.7, etaMinutes: 2, lat: 20.0035, lng: 73.7675, msg: 'Your Zooby Van is 700m away.' },
-    { distanceKm: 0.2, etaMinutes: 1, lat: 20.0050, lng: 73.7655, msg: 'Your Zooby Van is 200m away. Approaching doorstep.' },
-    { distanceKm: 0.0, etaMinutes: 0, lat: 20.0055, lng: 73.7650, msg: 'Your Zooby Van has arrived.' }
-  ];
 
   constructor() {
     this.loadFromStorage();
@@ -117,9 +97,15 @@ class EmergencyStore {
   }
 
   /**
-   * Initializes and starts a new emergency response
+   * Initializes and starts a new emergency response with city-aware dispatch
    */
   startEmergency(params: {
+    cityId?: string;
+    userId?: string;
+    userName?: string;
+    userPhone?: string;
+    userEmail?: string;
+    petId?: string;
     petName: string;
     petSpecies?: string;
     petBreed?: string;
@@ -127,74 +113,125 @@ class EmergencyStore {
     category: EmergencyCategory;
     description: string;
     locationCoords?: { lat: number; lng: number; address?: string };
-    userName?: string;
-    userPhone?: string;
+    assignedWorkerName?: string;
+    assignedVanPlate?: string;
   }): EmergencyState {
     this.stopMovementSimulation();
 
+    // Determine target city
+    let targetCity: ZoobyCity;
+    if (params.cityId) {
+      targetCity = getCityById(params.cityId);
+    } else if (params.locationCoords) {
+      const nearest = findNearestSupportedCity(params.locationCoords.lat, params.locationCoords.lng, 150);
+      targetCity = nearest ? nearest.city : getCityById('nashik');
+    } else {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('zooby_selected_city') : null;
+      targetCity = saved ? getCityById(saved) : getCityById('nashik');
+    }
+
+    const assignedVan = targetCity.assignedVans[0] || {
+      vanId: 'van-zmv-014',
+      plate: 'ZMV-014',
+      workerName: 'Rahul Sharma',
+      workerPhone: '+91 98223 99001'
+    };
+
+    const targetLoc = params.locationCoords || {
+      lat: targetCity.coordinates.lat,
+      lng: targetCity.coordinates.lng,
+      address: `${targetCity.coverageAreas[0] || 'Gangapur Road'}, ${targetCity.name}`
+    };
+
+    const hubLoc = {
+      lat: targetCity.vanHub.lat,
+      lng: targetCity.vanHub.lng
+    };
+
+    const vanPlate = params.assignedVanPlate || assignedVan.plate || 'ZMV-014';
+    const workerName = params.assignedWorkerName || assignedVan.workerName || 'Rahul Sharma';
+    const parentName = params.userName || 'Sam Sharma';
+    const parentPhone = params.userPhone || '+91 98220 11223';
+    const parentId = params.userId || 'usr-parent-sam';
+    const petDisplayName = params.petName || 'Bruno';
+
+    // Generate dynamic waypoints from van hub to emergency scene
+    this.simulationSteps = [
+      { distanceKm: 3.2, etaMinutes: 8, lat: hubLoc.lat, lng: hubLoc.lng, msg: `Your Zooby Mobile Care Van (${vanPlate}) is on the way.` },
+      { distanceKm: 2.8, etaMinutes: 7, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.15, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.15, msg: `Your Zooby Van (${workerName}) is navigating via ${targetCity.name} main route.` },
+      { distanceKm: 2.1, etaMinutes: 5, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.35, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.35, msg: `Your Zooby Van is approximately 5 minutes away.` },
+      { distanceKm: 1.4, etaMinutes: 3, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.60, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.60, msg: `Your Zooby Van is approximately 3 minutes away.` },
+      { distanceKm: 0.7, etaMinutes: 2, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.80, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.80, msg: `Your Zooby Van is 700m away in ${targetCity.name}.` },
+      { distanceKm: 0.2, etaMinutes: 1, lat: hubLoc.lat + (targetLoc.lat - hubLoc.lat) * 0.95, lng: hubLoc.lng + (targetLoc.lng - hubLoc.lng) * 0.95, msg: `Your Zooby Van is 200m away. Approaching doorstep.` },
+      { distanceKm: 0.0, etaMinutes: 0, lat: targetLoc.lat, lng: targetLoc.lng, msg: `Your Zooby Van has arrived at ${parentName}'s doorstep in ${targetCity.name}.` }
+    ];
+
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const targetLoc = params.locationCoords || DEFAULT_PET_LOCATION;
 
     const incident: EmergencyState = {
       incidentId: 'ZB-1042',
-      userId: 'usr-parent-rohan',
-      userName: params.userName || 'Rohan Mehta',
-      userPhone: params.userPhone || '+91 98201 45678',
-      petName: params.petName || 'Bruno',
+      cityId: targetCity.id,
+      cityName: targetCity.name,
+      userId: parentId,
+      userName: parentName,
+      userPhone: parentPhone,
+      userEmail: params.userEmail || 'sam@zooby.care',
+      petId: params.petId || 'pet-bruno',
+      petName: petDisplayName,
       petSpecies: params.petSpecies || 'Dog',
       petBreed: params.petBreed || 'Golden Retriever',
       category: params.category || 'injury_bleeding',
-      description: params.description || 'Pet injured and unable to move normally.',
+      description: params.description || `Emergency reported for ${petDisplayName} in ${targetCity.name}.`,
       location: {
         latitude: targetLoc.lat,
         longitude: targetLoc.lng,
-        address: targetLoc.address || 'Gangapur Road, Nashik'
+        address: targetLoc.address || `${targetCity.name}`
       },
       triage: {
         urgency: 'HIGH',
-        summary: `Immediate mobile response initiated for ${params.petName || 'Bruno'}.`,
+        summary: `Immediate mobile response initiated for ${petDisplayName} in ${targetCity.name}.`,
         primaryConcern: params.category.replace('_', ' ').toUpperCase(),
         firstAidAdvice: [
           'Keep pet calm, warm, and minimize movement.',
           'Do NOT administer human painkillers.',
           'Keep airway straight and clear.'
         ],
-        suggestedAction: 'Zooby Mobile Care Van ZMV-014 dispatched with emergency trauma kit.',
+        suggestedAction: `Zooby Mobile Care Van ${vanPlate} dispatched from ${targetCity.vanHub.name}.`,
         isLifeThreatening: false,
         triageModel: 'gemini-2.5-flash',
         triagedAt: new Date()
       },
-      assignedVanId: 'van-zmv-014',
-      assignedVanPlate: 'ZMV-014',
+      assignedVanId: assignedVan.vanId || 'van-zmv-014',
+      assignedVanPlate: vanPlate,
       assignedWorkerId: 'usr-van-rahul',
-      assignedWorkerName: 'Rahul',
-      assignedWorkerPhone: '+91 98223 99001',
+      assignedWorkerName: workerName,
+      assignedWorkerPhone: assignedVan.workerPhone || '+91 98223 99001',
       status: 'DISPATCH_CONFIRMED',
       statusHistory: [],
       distanceKm: 3.2,
       etaMinutes: 8,
       isMoving: true,
-      vanCoordinates: { ...DEFAULT_VAN_START },
+      vanCoordinates: { lat: hubLoc.lat, lng: hubLoc.lng, heading: 320 },
       emergencyCoordinates: {
         lat: targetLoc.lat,
         lng: targetLoc.lng,
-        address: targetLoc.address || 'Gangapur Road, Nashik'
+        address: targetLoc.address || `${targetCity.name}`
       },
       vetAssigned: {
-        id: 'prov-vet-mehta',
-        name: 'Dr. Aarav Mehta',
-        clinic: 'Zooby Care Vet Clinic, Nashik',
+        id: 'usr-vet-ananya',
+        name: 'Dr. Ananya Mehta',
+        clinic: 'Nashik Paws & Vet Care Clinic',
         phone: '+91 98221 44556',
         status: 'SUPPORTING',
-        avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=120'
+        avatarUrl: 'https://images.unsplash.com/photo-1594824813689-0b73c4d7e2e3?auto=format&fit=crop&q=80&w=240'
       },
       timeline: [
-        { time: timeStr, description: 'Pet Parent triggered 24/7 Rapid SOS', badge: 'SOS Triggered' },
-        { time: timeStr, description: `Emergency location verified: ${targetLoc.address || 'Gangapur Road'}`, badge: 'GPS Confirmed' },
-        { time: timeStr, description: 'Nearest Mobile Care Van ZMV-014 identified', badge: 'Van Found' },
-        { time: timeStr, description: 'Nearby veterinary support notified (Dr. Mehta)', badge: 'Vet Notified' },
-        { time: timeStr, description: 'Van Worker Rahul accepted emergency dispatch', badge: 'En Route' }
+        { time: timeStr, description: `Pet Parent ${parentName} triggered 24/7 Rapid SOS for ${petDisplayName} in ${targetCity.name}`, badge: 'SOS Triggered' },
+        { time: timeStr, description: `Location verified: ${targetLoc.address}`, badge: 'GPS Confirmed' },
+        { time: timeStr, description: `Nearest Mobile Care Van (${vanPlate}) dispatched`, badge: 'Van Found' },
+        { time: timeStr, description: `Veterinary support notified (Dr. Ananya Mehta)`, badge: 'Vet Notified' },
+        { time: timeStr, description: `Van Responder (${workerName}) accepted emergency route`, badge: 'En Route' }
       ],
       createdAt: new Date(),
       updatedAt: new Date()

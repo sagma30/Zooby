@@ -11,6 +11,8 @@ import {
 } from '../../services/gpsTracking';
 
 import { emergencyStore, EmergencyState } from '../../services/emergencyStore';
+import { getDynamicGreeting, getUserDisplayName, getPersonalizedEmptyState } from '../../utils/identity';
+import { ZoobyLogo } from '../common/ZoobyLogo';
 
 interface VanWorkerPortalProps {
   user?: UserProfile;
@@ -35,14 +37,19 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
   const { user: authUser, logout } = useAuth();
   const token = typeof window !== 'undefined' ? localStorage.getItem('zooby_auth_token') || undefined : undefined;
 
-  const activeUser = propUser || authUser || {
+  const activeUser = authUser || propUser || {
     id: 'usr-van-rahul',
-    name: 'Rahul',
+    name: 'Rahul Sharma',
+    displayName: 'Rahul Sharma',
+    firstName: 'Rahul',
+    lastName: 'Sharma',
     email: 'rahul.van@zooby.care',
     phone: '+91 98223 99001',
     role: 'VAN_WORKER' as const,
     location: 'College Road, Nashik',
+    city: 'Nashik',
     assignedVanPlate: 'ZMV-014',
+    jobTitle: 'Lead Mobile Technician',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=240'
   };
 
@@ -481,10 +488,10 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span>Unit #1 Dispatched • Nashik West Sector</span>
+                    <span>Van {activeUser.assignedVanPlate || 'ZMV-014'} Dispatched • Nashik West Sector</span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-bold font-quicksand text-white">
-                    Welcome back, {activeUser.name || 'Vikram Pawar'}!
+                    {getDynamicGreeting(activeUser, 'welcome')}!
                   </h1>
                   <p className="text-xs sm:text-sm text-stone-300 max-w-xl leading-relaxed">
                     You have <strong className="text-amber-400 font-bold">{activeJobs.length} active stops</strong> assigned on your Gangapur Road &amp; College Road route today. Hydrobath water is pre-heated to 38°C and supplies are fully stocked.
@@ -870,7 +877,7 @@ export const VanWorkerPortal: React.FC<VanWorkerPortalProps> = ({
               <div className="space-y-0.5">
                 <h4 className="font-bold text-[#683c00]">Nashik Service Route Notice</h4>
                 <p className="text-[#544434]">
-                  Pet parent Aisha Sharma requested extra gentle tear-stain cleansing for Bruno. Monsoon rain expected around 4:00 PM; indoor dry area requested for Rocky's visit.
+                  Pet parent Sam Sharma requested extra gentle tear-stain cleansing for Bruno. Monsoon rain expected around 4:00 PM; indoor dry area requested for Rocky's visit.
                 </p>
               </div>
             </div>

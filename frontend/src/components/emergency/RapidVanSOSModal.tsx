@@ -15,6 +15,7 @@ import {
 } from '../../services/aiTriage';
 import { emergencyStore, EmergencyState } from '../../services/emergencyStore';
 import { ZoobyRealMap } from '../common/ZoobyRealMap';
+import { useCity } from '../../context/CityContext';
 
 interface RapidVanSOSModalProps {
   isOpen: boolean;
@@ -47,6 +48,8 @@ export const RapidVanSOSModal: React.FC<RapidVanSOSModalProps> = ({
   pets = [],
   onSOSDispatched
 }) => {
+  const { currentCity } = useCity();
+
   // Navigation step state machine
   const [step, setStep] = useState<
     'false_alarm_check' | 'starting_response' | 'emergency_details' | 'location_detection' | 'finding_van' | 'van_found' | 'emergency_active' | 'summary_view'
@@ -132,16 +135,16 @@ export const RapidVanSOSModal: React.FC<RapidVanSOSModalProps> = ({
       setCoords({
         lat: device.latitude,
         lng: device.longitude,
-        address: currentUser?.location ? `${currentUser.location}, Nashik` : 'Gangapur Road, Near Silver Palm, Nashik',
+        address: currentUser?.location ? `${currentUser.location}, ${currentCity.name}` : `${currentCity.coverageAreas[0] || 'Central Area'}, ${currentCity.name}`,
         accuracyText: acc
       });
       setLocationStatus('detected');
     } catch {
       // Fallback
       setCoords({
-        lat: 20.0055,
-        lng: 73.7650,
-        address: 'Silver Palm Enclave, Gangapur Road, Nashik',
+        lat: currentCity.coordinates.lat,
+        lng: currentCity.coordinates.lng,
+        address: `${currentCity.coverageAreas[0] || 'Central Hub'}, ${currentCity.name}`,
         accuracyText: 'High (Verified Location)'
       });
       setLocationStatus('detected');
@@ -178,23 +181,29 @@ export const RapidVanSOSModal: React.FC<RapidVanSOSModalProps> = ({
     speakEmergencyGuidance(
       `Zooby emergency assistance activated for ${
         isOtherAnimal ? 'your animal' : selectedPet?.name || 'Bruno'
-      }. Stay calm. We are scanning for the nearest available emergency vehicle.`
+      } in ${currentCity.name}. Stay calm. We are scanning for the nearest available emergency vehicle.`
     );
 
     // Realistic Search Animation Transition
     setTimeout(() => {
       setStep('van_found');
 
-      // Start emergency in store
+      // Start emergency in store with current city
       const incident = emergencyStore.startEmergency({
+        cityId: currentCity.id,
+        userId: currentUser?.id || currentUser?.userId || 'usr-parent-sam',
+        userName: currentUser?.displayName || currentUser?.name || 'Sam Sharma',
+        userPhone: currentUser?.phone || '+91 98220 11223',
+        userEmail: currentUser?.email || 'sam@zooby.care',
+        petId: selectedPet?.id || 'pet-bruno',
         petName: isOtherAnimal ? 'Rescue Animal' : selectedPet?.name || 'Bruno',
         petSpecies: isOtherAnimal ? 'Animal' : selectedPet?.species || 'Dog',
         petBreed: isOtherAnimal ? 'Stray' : selectedPet?.breed || 'Golden Retriever',
         category: selectedCategory,
-        description: description || `${selectedType} reported for ${selectedPet?.name || 'Bruno'}.`,
+        description: description || `${selectedType} reported for ${selectedPet?.name || 'Bruno'} in ${currentCity.name}.`,
         locationCoords: { lat: coords.lat, lng: coords.lng, address: coords.address },
-        userName: currentUser?.name || 'Rohan Mehta',
-        userPhone: currentUser?.phone || '+91 98201 45678'
+        assignedWorkerName: 'Rahul Sharma',
+        assignedVanPlate: 'ZMV-014'
       });
 
       setActiveEmergency(incident);
@@ -713,10 +722,10 @@ export const RapidVanSOSModal: React.FC<RapidVanSOSModalProps> = ({
                   <div>
                     <div className="text-[10px] font-bold uppercase text-blue-700">🩺 Vet Support</div>
                     <h4 className="font-bold text-sm text-[#1b1c1a]">
-                      {activeEmergency.vetAssigned?.name || 'Dr. Aarav Mehta'} is supporting this emergency
+                      {activeEmergency.vetAssigned?.name || 'Dr. Ananya Mehta'} is supporting this emergency
                     </h4>
                     <p className="text-[11px] text-[#716153]">
-                      {activeEmergency.vetAssigned?.clinic || 'Zooby Care Hospital'}
+                      {activeEmergency.vetAssigned?.clinic || 'Nashik Paws & Vet Care Clinic'}
                     </p>
                   </div>
                 </div>
@@ -738,7 +747,7 @@ export const RapidVanSOSModal: React.FC<RapidVanSOSModalProps> = ({
                     className="py-2 px-4 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-sm">call</span>
-                    <span>Call Driver ({activeEmergency.assignedWorkerName || 'Rahul'})</span>
+                    <span>Call Driver ({activeEmergency.assignedWorkerName || 'Rahul Sharma'})</span>
                   </a>
                 </div>
 

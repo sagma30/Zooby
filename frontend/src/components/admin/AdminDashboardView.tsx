@@ -15,6 +15,8 @@ import {
   REVENUE_CHART_DATA_WEEKLY
 } from '../../data/adminMockData';
 import { ProviderVerification } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { getDynamicGreeting, getUserDisplayName } from '../../utils/identity';
 
 interface AdminDashboardViewProps {
   onNavigateTab: (tab: string) => void;
@@ -25,6 +27,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   onNavigateTab,
   onOpenVerificationReview
 }) => {
+  const { user } = useAuth();
   const [chartPeriod, setChartPeriod] = useState<'monthly' | 'weekly'>('monthly');
   const [verifications, setVerifications] = useState(INITIAL_VERIFICATIONS);
 
@@ -39,9 +42,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 font-jakarta">
       {/* Page Header */}
       <div>
-        <h2 className="text-xl md:text-2xl font-bold text-[#1b1c1a]">Overview</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-[#1b1c1a]">
+          {getDynamicGreeting(user)}
+        </h2>
         <p className="text-sm text-[#705e4f] mt-1">
-          Here's what's happening across the platform today.
+          Here's what's happening across the Zooby platform today, {getUserDisplayName(user, 'Priya')}.
         </p>
       </div>
 
