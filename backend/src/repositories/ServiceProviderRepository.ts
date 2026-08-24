@@ -3,10 +3,8 @@ import { getDatabase } from '../config/database';
 import { ServiceProvider } from '../models/ServiceProvider';
 
 export class ServiceProviderRepository {
-  private collection: Collection<ServiceProvider>;
-
-  constructor() {
-    this.collection = getDatabase().collection<ServiceProvider>('service_providers');
+  private get collection(): Collection<ServiceProvider> {
+    return getDatabase().collection<ServiceProvider>('service_providers');
   }
 
   async create(provider: ServiceProvider): Promise<ServiceProvider> {

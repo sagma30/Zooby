@@ -3,10 +3,8 @@ import { getDatabase } from '../config/database';
 import { Pet } from '../models/Pet';
 
 export class PetRepository {
-  private collection: Collection<Pet>;
-
-  constructor() {
-    this.collection = getDatabase().collection<Pet>('pets');
+  private get collection(): Collection<Pet> {
+    return getDatabase().collection<Pet>('pets');
   }
 
   async create(pet: Pet): Promise<Pet> {

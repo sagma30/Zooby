@@ -4,10 +4,8 @@ import { User } from '../models/User';
 import { UserRole } from '../constants/roles';
 
 export class UserRepository {
-  private collection: Collection<User>;
-
-  constructor() {
-    this.collection = getDatabase().collection<User>('users');
+  private get collection(): Collection<User> {
+    return getDatabase().collection<User>('users');
   }
 
   async create(user: User): Promise<User> {

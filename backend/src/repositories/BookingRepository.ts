@@ -3,10 +3,8 @@ import { getDatabase } from '../config/database';
 import { Booking } from '../models/Booking';
 
 export class BookingRepository {
-  private collection: Collection<Booking>;
-
-  constructor() {
-    this.collection = getDatabase().collection<Booking>('bookings');
+  private get collection(): Collection<Booking> {
+    return getDatabase().collection<Booking>('bookings');
   }
 
   async create(booking: Booking): Promise<Booking> {

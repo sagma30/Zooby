@@ -3,10 +3,8 @@ import { getDatabase } from '../config/database';
 import { HealthEvent } from '../models/HealthEvent';
 
 export class HealthEventRepository {
-  private collection: Collection<HealthEvent>;
-
-  constructor() {
-    this.collection = getDatabase().collection<HealthEvent>('health_events');
+  private get collection(): Collection<HealthEvent> {
+    return getDatabase().collection<HealthEvent>('health_events');
   }
 
   async create(event: HealthEvent): Promise<HealthEvent> {
