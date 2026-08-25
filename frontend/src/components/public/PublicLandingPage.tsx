@@ -32,7 +32,6 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 }) => {
   const { currentCity, supportedCities, setCityById } = useCity();
   const { isAuthenticated, user, role } = useAuth();
-  const heroRef = useRef<HTMLElement | null>(null);
 
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<'all' | 'van' | 'clinic' | 'home'>('all');
   const [adoptFilter, setAdoptFilter] = useState<'All' | 'Dog' | 'Cat' | 'Puppy' | 'Kitten'>('All');
@@ -312,7 +311,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-jakarta selection:bg-[#ffdcbc] selection:text-[#683c00]">
+    <div className="min-h-screen bg-[#fbf9f5] text-[#1b1c1a] font-jakarta selection:bg-[#ffdcbc] selection:text-[#683c00] relative">
+      {/* Global Interactive Paw Print Cursor Trail */}
+      <PawCursorHeroTrail />
+
       {/* 1. Public Header */}
       <header className="sticky top-0 z-40 bg-[#fbf9f5]/95 backdrop-blur-md border-b border-[#efeeea]">
         <div className="max-w-[1240px] mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
@@ -482,12 +484,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
       {/* 2. Hero Section */}
       <section
-        ref={heroRef}
         className="relative overflow-hidden pt-8 pb-16 md:py-20 max-w-[1240px] mx-auto px-4 md:px-8 group"
       >
-        {/* Subtle Interactive Paw Print Cursor Trail */}
-        <PawCursorHeroTrail heroContainerRef={heroRef} />
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           {/* Left Hero Copy */}
           <div className="lg:col-span-7 space-y-6">

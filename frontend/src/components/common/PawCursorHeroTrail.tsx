@@ -11,16 +11,20 @@ interface PawPrint {
 }
 
 interface PawCursorHeroTrailProps {
-  /** The ref of the hero container to bound the cursor tracking */
-  heroContainerRef: React.RefObject<HTMLElement | null>;
+  /** Optional container ref to bound cursor tracking; if not provided, tracks globally across the full landing page */
+  containerRef?: React.RefObject<HTMLElement | null>;
+  /** Legacy prop for backward compatibility */
+  heroContainerRef?: React.RefObject<HTMLElement | null>;
   /** Optional custom class name */
   className?: string;
 }
 
 export const PawCursorHeroTrail: React.FC<PawCursorHeroTrailProps> = ({
+  containerRef,
   heroContainerRef,
   className = ''
 }) => {
+  const targetRef = containerRef || heroContainerRef;
   const [paws, setPaws] = useState<PawPrint[]>([]);
   const [isEnabled, setIsEnabled] = useState(false);
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -54,34 +58,34 @@ export const PawCursorHeroTrail: React.FC<PawCursorHeroTrailProps> = ({
     };
   }, []);
 
-  // Handle cursor movement inside the hero container
+  // Handle cursor movement across the viewport / container
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      if (!isEnabled || !heroContainerRef.current) return;
+      if (!isEnabled) return;
 
-      const heroRect = heroContainerRef.current.getBoundingClientRect();
+      let posX = e.clientX;
+      let posY = e.clientY;
 
-      // Check if cursor is inside the hero container viewport
-      if (
-        e.clientX < heroRect.left ||
-        e.clientX > heroRect.right ||
-        e.clientY < heroRect.top ||
-        e.clientY > heroRect.bottom
-      ) {
-        return;
+      // If a bounding container ref is explicitly provided, bound within it
+      if (targetRef && targetRef.current) {
+        const rect = targetRef.current.getBoundingClientRect();
+        if (
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom
+        ) {
+          return;
+        }
       }
-
-      // Position relative to hero container
-      const relativeX = e.clientX - heroRect.left;
-      const relativeY = e.clientY - heroRect.top;
 
       if (!lastPosRef.current) {
-        lastPosRef.current = { x: relativeX, y: relativeY };
+        lastPosRef.current = { x: posX, y: posY };
         return;
       }
 
-      const dx = relativeX - lastPosRef.current.x;
-      const dy = relativeY - lastPosRef.current.y;
+      const dx = posX - lastPosRef.current.x;
+      const dy = posY - lastPosRef.current.y;
       const distance = Math.hypot(dx, dy);
 
       if (distance >= distanceThreshold) {
@@ -92,16 +96,16 @@ export const PawCursorHeroTrail: React.FC<PawCursorHeroTrailProps> = ({
         const isLeft = !isLeftPawRef.current;
         isLeftPawRef.current = isLeft;
 
-        // Add slight alternating tilt: -12 deg for left paw, +12 deg for right paw
+        // Add slight alternating tilt: -10 deg for left paw, +10 deg for right paw
         const tiltOffset = isLeft ? -10 : 10;
         const finalAngle = movementAngle + 90 + tiltOffset;
 
-        // Place paw slightly trailing behind movement vector (6-10px behind)
+        // Place paw slightly trailing behind movement vector (8px behind)
         const lagDistance = 8;
         const normDx = dx / distance;
         const normDy = dy / distance;
-        const spawnX = relativeX - normDx * lagDistance;
-        const spawnY = relativeY - normDy * lagDistance;
+        const spawnX = posX - normDx * lagDistance;
+        const spawnY = posY - normDy * lagDistance;
 
         const newPaw: PawPrint = {
           id: ++pawIdCounter.current,
@@ -118,24 +122,22 @@ export const PawCursorHeroTrail: React.FC<PawCursorHeroTrailProps> = ({
           return updated.length > maxPaws ? updated.slice(updated.length - maxPaws) : updated;
         });
 
-        lastPosRef.current = { x: relativeX, y: relativeY };
+        lastPosRef.current = { x: posX, y: posY };
       }
     },
-    [isEnabled, heroContainerRef]
+    [isEnabled, targetRef]
   );
 
-  // Bind mousemove listener
+  // Bind global mousemove listener
   useEffect(() => {
     if (!isEnabled) return;
-    const heroEl = heroContainerRef.current;
-    if (!heroEl) return;
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [isEnabled, handleMouseMove, heroContainerRef]);
+  }, [isEnabled, handleMouseMove]);
 
   // Clean up expired paws periodically (every 100ms)
   useEffect(() => {
@@ -153,7 +155,7 @@ export const PawCursorHeroTrail: React.FC<PawCursorHeroTrailProps> = ({
 
   return (
     <div
-      className={`absolute inset-0 overflow-hidden pointer-events-none z-20 ${className}`}
+      className={`fixed inset-0 overflow-hidden pointer-events-none z-30 ${className}`}
       aria-hidden="true"
     >
       {paws.map((paw) => {
@@ -163,7 +165,7 @@ export const PawCursorHeroTrail: React.FC<PawCursorHeroTrailProps> = ({
         return (
           <div
             key={paw.id}
-            className="absolute transition-transform duration-75"
+            className="fixed transition-transform duration-75 pointer-events-none"
             style={{
               left: `${paw.x}px`,
               top: `${paw.y}px`,
